@@ -8,6 +8,8 @@ import com.pcc.project.ECS.Entity;
 public class Transform extends Component {
     public static String defaultName = "transform";
 
+    private Matrix3 matAux = new Matrix3(  );
+
     protected Matrix3 localToWorldMatrix = new Matrix3();
 
     protected Matrix3 worldToLocalMatrix = new Matrix3();
@@ -68,7 +70,9 @@ public class Transform extends Component {
     }
 
     public Transform setPosition ( Vector2 position ) {
-        this.invalidate();
+        if ( this.position.x != position.x && this.position.y != position.y ) {
+            this.invalidate();
+        }
 
         this.position = position;
 
@@ -76,7 +80,11 @@ public class Transform extends Component {
     }
 
     public Transform setPosition ( float x, float y ) {
-        return this.setPosition( new Vector2( x, y ) );
+        if ( x != this.position.x || y != this.position.y ) {
+            return this.setPosition( new Vector2( x, y ) );
+        }
+
+        return this;
     }
 
     public Vector2 getScale () {
@@ -84,7 +92,9 @@ public class Transform extends Component {
     }
 
     public Transform setScale ( Vector2 scale ) {
-        this.invalidate();
+        if ( this.scale.x != scale.x || this.scale.y != scale.y ) {
+            this.invalidate();
+        }
 
         this.scale = scale;
 
@@ -92,7 +102,11 @@ public class Transform extends Component {
     }
 
     public Transform setScale ( float x, float y ) {
-        return this.setScale( new Vector2( x, y ) );
+        if ( this.scale.x != x || this.scale.y != y ) {
+            return this.setScale( new Vector2( x, y ) );
+        }
+
+        return this;
     }
 
     public float getRotation () {
@@ -100,7 +114,9 @@ public class Transform extends Component {
     }
 
     public Transform setRotation ( float rotation ) {
-        this.invalidate();
+        if ( this.rotation != rotation ) {
+            this.invalidate();
+        }
 
         this.rotation = rotation;
 
@@ -116,12 +132,10 @@ public class Transform extends Component {
     }
 
     public void setGlobalPosition ( Vector2 position ) {
-        this.invalidate();
-
         if ( this.parentTransform != null ) {
-            this.position = this.parentTransform.inverseTransformPoint( position );
+            this.setPosition( this.parentTransform.inverseTransformPoint( position ) );
         } else {
-            this.position = position;
+            this.setPosition( position );
         }
     }
 
@@ -134,12 +148,10 @@ public class Transform extends Component {
     }
 
     public void setGlobalRotation ( float rotation ) {
-        this.invalidate();
-
         if ( this.parentTransform != null ) {
-            this.rotation = this.parentTransform.inverseTransformRotation( rotation );
+            this.setRotation( this.parentTransform.inverseTransformRotation( rotation ) );
         } else {
-            this.rotation = rotation;
+            this.setRotation( rotation );
         }
     }
 
@@ -149,6 +161,14 @@ public class Transform extends Component {
         }
 
         return this.globalScale;
+    }
+
+    public Transform setGlobalScale ( Vector2 scale ) {
+        if ( this.parentTransform != null ) {
+            return this.setScale( this.parentTransform.inverseTransformVector( scale ) );
+        } else {
+            return this.setScale( scale );
+        }
     }
 
     public void invalidate () {
@@ -182,7 +202,7 @@ public class Transform extends Component {
 
 
     public Vector2 transformPoint ( Vector2 point ) {
-        Matrix3 mat = new Matrix3( this.getLocalToWorldMatrix() ).mul( new Matrix3(  ).setToTranslation( point ) );
+        Matrix3 mat = this.matAux.set( this.getLocalToWorldMatrix() ).translate( point );
 
         return mat.getTranslation( new Vector2() );
     }
@@ -212,7 +232,7 @@ public class Transform extends Component {
     public Vector2 inverseTransformPoint ( Vector2 vector ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
-        return new Matrix3( mat ).translate( vector ).getTranslation( new Vector2(  ) );
+        return this.matAux.set( mat ).translate( vector ).getTranslation( new Vector2(  ) );
     }
 
     public Vector2 inverseTransformDirection ( Vector2 direction ) {
@@ -222,6 +242,12 @@ public class Transform extends Component {
     public float inverseTransformRotation ( float rotation ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
-        return new Matrix3( mat ).rotate( rotation ).getRotation();
+        return this.matAux.set( mat ).rotate( rotation ).getRotation();
+    }
+
+    public Vector2 inverseTransformVector ( Vector2 vector ) {
+        Matrix3 mat = this.getWorldToLocalMatrix();
+
+        return this.matAux.set( mat ).scale( vector ).getScale( new Vector2(  ) );
     }
 }

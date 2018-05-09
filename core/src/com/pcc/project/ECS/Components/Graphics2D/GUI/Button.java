@@ -3,7 +3,10 @@ package com.pcc.project.ECS.Components.Graphics2D.GUI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
+import com.pcc.project.ECS.Components.Graphics2D.Text;
+import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Entity;
+import com.pcc.project.Prefabs.GameObject;
 
 public class Button extends InteractiveControl {
     public static String defaultName = "button";
@@ -25,6 +28,10 @@ public class Button extends InteractiveControl {
     protected Sprite spriteStateHovered;
 
     protected Sprite spriteStatePressed;
+
+    protected Entity buttonLabel;
+
+    protected Text buttonLabelText;
 
     public Button ( Entity entity, String name ) {
         super( entity, name );
@@ -157,6 +164,22 @@ public class Button extends InteractiveControl {
                 .setAnchor( this.getAnchor() )
                 .setTexturePath( String.format( "uipack/PNG/%s.png", this.getButtonAssetName( ButtonState.Pressed ) ) )
                 .setEnabled( this.state == ButtonState.Pressed );
+
+//        this.buttonLabelText = this.entity.addComponent( Text.class );
+//        this.buttonLabelText
+//                .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
+//                .setValue( "Test" );
+
+
+        this.buttonLabel = this.entity.instantiate( new GameObject( "buttonLabel" ) );
+
+        this.buttonLabelText = this.buttonLabel.addComponent( Text.class );
+        this.buttonLabelText
+                .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
+                .setValue( "Test" );
+
+        this.buttonLabel.getComponent( Transform.class )
+                .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
     }
 
     @Override
@@ -180,6 +203,8 @@ public class Button extends InteractiveControl {
             this.spriteStateNormal.destroy();
             this.spriteStateHovered.destroy();
             this.spriteStatePressed.destroy();
+
+            this.buttonLabel.destroy();
 
             this.spriteStateNormal = null;
             this.spriteStateHovered = null;
