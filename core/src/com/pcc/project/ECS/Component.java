@@ -1,6 +1,8 @@
 package com.pcc.project.ECS;
 
 public class Component {
+    public static String defaultName = null;
+
     public Entity entity;
 
     public String name;
@@ -16,8 +18,10 @@ public class Component {
         return this.enabled;
     }
 
-    public void setEnabled ( boolean enabled ) {
+    public Component setEnabled ( boolean enabled ) {
         this.enabled = enabled;
+
+        return this;
     }
 
     public void onCreate () { }

@@ -8,6 +8,8 @@ import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
 public class Renderer2D extends Component {
+    public static String defaultName = "renderer2D";
+
     public SpriteBatch spriteBatch;
 
     public int width = 0;
@@ -19,7 +21,7 @@ public class Renderer2D extends Component {
         super( entity, name );
     }
 
-    protected Camera getCamera () {
+    public Camera getCamera () {
         return this.entity.getComponentsInChildren( Camera.class )
                 .stream()
                 .filter( Camera::getEnabled )
@@ -55,12 +57,10 @@ public class Renderer2D extends Component {
                 camera.viewport.update( this.width, this.height, true );
             }
 
+            camera.viewport.apply();
+
             this.spriteBatch.setProjectionMatrix( camera.getCam().combined );
         }
-
-        Gdx.gl.glClearColor( 0.8f, 0.8f, 0.8f, 1 );
-//        Gdx.gl.glClear( GL20.GL_COLOR_BUFFER_BIT );
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
 
         this.spriteBatch.begin();
     }
@@ -70,14 +70,15 @@ public class Renderer2D extends Component {
         super.onAfterDraw();
 
         this.spriteBatch.end();
+        this.spriteBatch.flush();
 
-        if ( this.frameCount++ > 60 * 10 ) {
-            this.spriteBatch.dispose();
-
-            this.spriteBatch = new SpriteBatch();
-
-            this.frameCount = 0;
-        }
+//        if ( this.frameCount++ > 60 * 10 ) {
+//            this.spriteBatch.dispose();
+//
+//            this.spriteBatch = new SpriteBatch();
+//
+//            this.frameCount = 0;
+//        }
     }
 
     @Override

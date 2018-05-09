@@ -3,22 +3,44 @@ package com.pcc.project.ECS.Components.Graphics2D;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
+import javax.sound.midi.Patch;
+
 public class Sprite extends Component {
+    public static String defaultName = "sprite";
+
     public enum Anchor { Left, Center, Right, Top, Bottom, TopLeft, TopRight, BottomLeft, BottomRight };
+
+    public static class PatchConfig {
+        public int left, right, top, bottom;
+
+        public PatchConfig ( int left, int right, int top, int bottom ) {
+            this.left = left;
+            this.right = right;
+            this.top = top;
+            this.bottom = bottom;
+        }
+    }
 
     protected String texturePath;
 
     protected Texture texture;
 
-    protected Anchor anchor = Anchor.Center;
+    protected Anchor anchor = Anchor.BottomLeft;
 
     protected Texture.TextureWrap verticalWrap;
 
     protected Texture.TextureWrap horizontalWrap;
+
+    protected Color color = new Color( 1, 1, 1, 1 );
+
+    protected Vector2 customSize = null;
+
+    protected PatchConfig patchConfig = null;
 
     /* Component Dependencies */
 
@@ -26,9 +48,11 @@ public class Sprite extends Component {
 
     protected Transform transform;
 
-    protected Color color = new Color( 1, 1, 1, 1 );
+    public Sprite setCustomSize ( Vector2 customSize ) {
+        this.customSize = customSize;
 
-    protected Vector2 customSize = null;
+        return this;
+    }
 
     public Color getColor () {
         return color;
@@ -47,15 +71,22 @@ public class Sprite extends Component {
     }
 
     public Vector2 getCustomSize () {
-        return this.getCustomSize();
+        return this.customSize;
     }
 
-    public Sprite setCustomSize ( Vector2 customSize ) {
-        this.customSize = customSize;
+    public PatchConfig getNinePatchConfig () {
+        return this.patchConfig;
+    }
+
+    public Sprite setNinePatchConfig ( PatchConfig patchConfig ) {
+        this.patchConfig = patchConfig;
 
         return this;
     }
 
+    public Sprite setNinePatchConfig ( int left, int right, int top, int bottom ) {
+        return this.setNinePatchConfig( new PatchConfig( left, right, top, bottom ) );
+    }
 
     public Sprite setWrap ( Texture.TextureWrap vertical, Texture.TextureWrap horizontal ) {
         this.verticalWrap = vertical;
@@ -123,11 +154,31 @@ public class Sprite extends Component {
     }
 
     public Vector2 getAnchorPosition () {
+        if ( this.getCustomSize() == null && this.getTexture() == null ) {
+            return new Vector2( 0, 0 );
+        }
+
         float w = this.getTexture().getWidth();
         float h = this.getTexture().getHeight();
 
         if ( this.anchor == Anchor.Center ) {
             return new Vector2( w / 2, h / 2 );
+        } else if ( this.anchor == Anchor.Left ) {
+            return new Vector2( 0, h / 2 );
+        } else if ( this.anchor == Anchor.Right ) {
+            return new Vector2( w, h / 2 );
+        } else if ( this.anchor == Anchor.Top ) {
+            return new Vector2( w / 2, h );
+        } else if ( this.anchor == Anchor.Bottom ) {
+            return new Vector2( w / 2, 0 );
+        } else if ( this.anchor == Anchor.BottomLeft ) {
+            return new Vector2( 0, 0 );
+        } else if ( this.anchor == Anchor.BottomRight ) {
+            return new Vector2( w, 0 );
+        } else if ( this.anchor == Anchor.TopLeft ) {
+            return new Vector2( 0, h );
+        } else if ( this.anchor == Anchor.TopRight ) {
+            return new Vector2( w, h );
         } else {
             return new Vector2( 0, 0 );
         }
@@ -163,11 +214,21 @@ public class Sprite extends Component {
             int width = this.customSize != null ? (int)this.customSize.x : texture.getWidth();
             int height = this.customSize != null ? (int)this.customSize.y : texture.getHeight();
 
-            this.renderer.spriteBatch.draw( texture,
-                    pos.x, pos.y, 0, 0,
-                    width, height,
-                    scl.x, scl.y, rotation,
-                    0, 0, width, height, false, false );
+            if ( this.patchConfig != null ) {
+                NinePatch patch = new NinePatch( this.texture, this.patchConfig.left, this.patchConfig.right, this.patchConfig.top, this.patchConfig.bottom );
+
+                patch.draw( this.renderer.spriteBatch,
+                        pos.x, pos.y, 0, 0,
+                        width, height,
+                        scl.x, scl.y, rotation );
+
+            } else {
+                this.renderer.spriteBatch.draw( texture,
+                        pos.x, pos.y, 0, 0,
+                        width, height,
+                        scl.x, scl.y, rotation,
+                        0, 0, width, height, false, false );
+            }
 
             this.renderer.spriteBatch.setColor( color );
         }

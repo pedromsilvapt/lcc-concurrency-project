@@ -1,7 +1,10 @@
 package com.pcc.project.Prefabs;
 
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcc.project.ECS.Components.Graphics2D.*;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 
@@ -14,11 +17,22 @@ public class GameWorld extends Prefab< Entity > {
 
     protected int worldHeight;
 
+    protected boolean customCursor;
+
     public GameWorld () {
-        this( 1000, 1000 );
+        this( false );
+    }
+
+    public GameWorld ( boolean customCursor ) {
+        this( customCursor,1000, 1000 );
     }
 
     public GameWorld ( int worldWidth, int worldHeight ) {
+        this( false, worldWidth, worldHeight );
+    }
+
+    public GameWorld ( boolean customCursor, int worldWidth, int worldHeight ) {
+        this.customCursor = customCursor;
         this.worldWidth = worldWidth;
         this.worldHeight = worldHeight;
     }
@@ -26,15 +40,16 @@ public class GameWorld extends Prefab< Entity > {
     @Override
     public Entity instantiate () {
         Entity gameWorld = new GameObject().instantiate();
-        gameWorld.addComponent( Renderer2D.class, "renderer" );
+
+        /* Board Entities */
+        Entity board = gameWorld.instantiate( new GameObject( "board" ) );
+        board.addComponent( Renderer2D.class, "renderer" );
 
         /* Camera */
-        Entity cameraEntity = gameWorld.instantiate( new GameObject() );
+        Entity cameraEntity = board.instantiate( new GameObject( "camera" ) );
         Camera camera = cameraEntity.addComponent( Camera.class, "camera" );
         camera.setViewport( new FitViewport( worldWidth, worldHeight, camera.getInternalCamera() ) );
 
-        /* Board Entities */
-        Entity board = gameWorld.instantiate( new GameObject() );
 
         board.instantiate( new PlayerShip( "player", PlayerShip.ShipColor.Blue, true ) )
             .getComponent( Transform.class ).setPosition( 100, 100 );
@@ -60,6 +75,24 @@ public class GameWorld extends Prefab< Entity > {
 
         board.instantiate( new AlienShip( "alien4", AlienShip.ShipColor.Red ) )
                 .getComponent( Transform.class ).setPosition( 700, 300 );
+
+
+        Entity gui = gameWorld.instantiate( new GameObject( "gui" ) );
+        gui.addComponent( Renderer2D.class, "renderer" );
+        gui.addComponent( Camera.class, "camera", cameraGui ->  {
+            cameraGui.setViewport( new ScreenViewport( cameraGui.getInternalCamera() ) );
+        } );
+
+
+        gui.instantiate( new GameObject( "button" ) )
+                .addComponent( Button.class, "button", button -> {
+                    button.setTheme( Theme.Blue )
+                    .setShiny( true )
+                    .setSize( 200, 49 );
+                } )
+                .getComponent( Transform.class ).setPosition( 10, 10 );
+
+        gui.instantiate( new Cursor(), cursor -> cursor.setEnabled( false ) );
 
         return gameWorld;
     }

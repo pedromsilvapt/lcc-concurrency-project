@@ -3,6 +3,7 @@ package com.pcc.project;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.pcc.project.ECS.Entity;
@@ -15,21 +16,11 @@ public class PccProject extends ApplicationAdapter {
 
     Camera camera;
 
-    ReentrantLock gameWorldLock = new ReentrantLock(  );
+    boolean customCursor = true;
 
     @Override
     public void create () {
-        this.gameWorld = new GameWorld().instantiate();
-
-//        float w = Gdx.graphics.getWidth();
-//        float h = Gdx.graphics.getHeight();
-
-        // Constructs a new OrthographicCamera, using the given viewport width and height
-        // Height is multiplied by aspect ratio.
-//        camera = new OrthographicCamera(30, 30 * (h / w));
-//
-//        camera.position.set(camera.viewportWidth / 2f, camera.viewportHeight / 2f, 0);
-//        camera.update();
+        this.gameWorld = new GameWorld( this.customCursor ).instantiate();
     }
 
     @Override
@@ -41,25 +32,19 @@ public class PccProject extends ApplicationAdapter {
     public void render () {
         Gdx.graphics.setTitle( "Pcc Project " + Gdx.graphics.getFramesPerSecond() );
 
-        this.gameWorldLock.lock();
+//        Gdx.input.setCursorCatched( this.customCursor );
 
-        try {
-            this.gameWorld.onAwake();
-            this.gameWorld.onUpdate();
-            this.gameWorld.onDraw();
-        } finally {
-            this.gameWorldLock.unlock();
-        }
+        Gdx.gl.glClearColor( 0.8f, 0.8f, 0.8f, 1 );
+
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
+
+        this.gameWorld.onAwake();
+        this.gameWorld.onUpdate();
+        this.gameWorld.onDraw();
     }
 
     @Override
     public void dispose () {
-        this.gameWorldLock.lock();
-
-        try {
-            this.gameWorld.onDestroy();
-        } finally {
-            this.gameWorldLock.unlock();
-        }
+        this.gameWorld.onDestroy();
     }
 }

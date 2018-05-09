@@ -6,6 +6,7 @@ import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
 public class Transform extends Component {
+    public static String defaultName = "transform";
 
     protected Matrix3 localToWorldMatrix = new Matrix3();
 
@@ -161,11 +162,11 @@ public class Transform extends Component {
             this.localToWorldMatrix.idt();
         }
 
+        this.localToWorldMatrix.translate( this.position );
+
         this.localToWorldMatrix.scale( this.scale );
 
         this.localToWorldMatrix.rotate( this.rotation );
-
-        this.localToWorldMatrix.translate( this.position );
 
         this.worldToLocalMatrix = new Matrix3( this.localToWorldMatrix ).inv();
 

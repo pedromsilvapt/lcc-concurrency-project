@@ -11,6 +11,8 @@ import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
 public class Camera extends Component {
+    public static String defaultName = "camera";
+
     protected Transform transform;
 
     protected OrthographicCamera cam;
@@ -45,6 +47,31 @@ public class Camera extends Component {
         return this;
     }
 
+    public Transform getTransform () {
+        return this.transform;
+    }
+
+    public Vector2 screenToGlobal ( Vector2 screen ) {
+        return this.getViewport().unproject( screen );
+    }
+
+    public Vector2 screenToLocal ( Vector2 screen ) {
+        return this.screenToLocal( screen, this.transform );
+    }
+
+    public Vector2 screenToLocal ( Vector2 screen, Transform transform ) {
+        return transform.inverseTransformPoint( this.screenToGlobal( screen ) );
+    }
+
+    public Vector2 screenToLocal ( Vector2 screen, Entity entity ) {
+        Transform transform = entity.getComponentInParent( Transform.class );
+        if ( transform != null ) {
+            return this.screenToLocal( screen, transform );
+        } else {
+            return this.screenToGlobal( screen );
+        }
+    }
+
     @Override
     public void onAwake () {
         this.transform = this.entity.getComponentInParent( Transform.class );
@@ -52,9 +79,9 @@ public class Camera extends Component {
 
     public OrthographicCamera getCam () {
         if ( this.transform != null ) {
-            Vector2 gPos = this.transform.getGlobalPosition();
-
-            boolean update = false;
+//            Vector2 gPos = this.transform.getGlobalPosition();
+//
+//            boolean update = false;
 
 //            if ( gPos.x != cam.position.x || gPos.y != cam.position.y ) {
 //                cam.position.set( gPos, cam.position.z );
@@ -70,9 +97,9 @@ public class Camera extends Component {
 
 //            cam.rotate( new Vector2( cam.direction.x, cam.direction.y ).angle() );
 
-            if ( update ) {
-                cam.update();
-            }
+//            if ( update ) {
+//                cam.update();
+//            }
         }
 
         return this.cam;

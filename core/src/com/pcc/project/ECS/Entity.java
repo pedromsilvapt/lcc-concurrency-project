@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /*
@@ -55,17 +56,39 @@ public class Entity {
         this.components = new ArrayList<>(  );
     }
 
+    public boolean getEnabled () {
+        return this.enabled;
+    }
+
+    public Entity setEnabled ( boolean enabled ) {
+        this.enabled = enabled;
+
+        return this;
+    }
+
     public  <T extends Entity> T instantiate ( Prefab<T> prefab ) {
+        return this.instantiate( prefab, null );
+    }
+
+    public  <T extends Entity> T instantiate ( Prefab<T> prefab, Consumer<T> consumer ) {
         T entity = prefab.instantiate();
 
         entity.parent = this;
 
         this.children.add( entity );
 
+        if ( consumer != null ) {
+            consumer.accept( entity );
+        }
+
         return entity;
     }
 
-    public <T extends Entity> T addEntity ( Class<T> entityType, String name ) { //throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public <T extends Entity> T addEntity ( Class<T> entityType, String name ) {
+        return this.addEntity( entityType, name, null );
+    }
+
+    public <T extends Entity> T addEntity ( Class<T> entityType, String name, Consumer<T> consumer ) {
         try {
             Constructor< T > constructor = entityType.getConstructor( Entity.class, String.class );
 
@@ -74,6 +97,10 @@ public class Entity {
             entity.parent = this;
 
             this.children.add( entity );
+
+            if ( consumer != null ) {
+                consumer.accept( entity );
+            }
 
             return entity;
         } catch ( Exception e ) {
@@ -89,7 +116,29 @@ public class Entity {
         this.children.remove( entity );
     }
 
-    public < T extends Component > T addComponent ( Class< T > componentType, String name ) { // throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+    public < T extends Component > T addComponent ( Class< T > componentType ) {
+        String name;
+
+        try {
+            name = (String)componentType.getField( "defaultName" ).get( null );
+        } catch ( Exception e ) {
+            name = null;
+        }
+
+        return this.addComponent( componentType, name );
+    }
+
+    public < T extends Component > Entity addComponent ( Class< T > componentType, Consumer<T> consumer ) {
+        T entity = this.addComponent( componentType );
+
+        if ( consumer != null ) {
+            consumer.accept( entity );
+        }
+
+        return this;
+    }
+
+    public < T extends Component > T addComponent ( Class< T > componentType, String name ) {
         try {
             Constructor< T > constructor = componentType.getConstructor( Entity.class, String.class );
 
@@ -109,6 +158,16 @@ public class Entity {
         }
 
         return null;
+    }
+
+    public < T extends Component > Entity addComponent ( Class< T > componentType, String name, Consumer<T> consumer ) {
+        T entity = this.addComponent( componentType, name );
+
+        if ( entity != null ) {
+            consumer.accept( entity );
+        }
+
+        return this;
     }
 
     public void destroyComponent ( Component component ) {
@@ -231,13 +290,21 @@ public class Entity {
     /* Lifecycle Events */
 
     public void onAwake () {
-        for ( Component component : this.components ) {
-            ComponentState state = this.componentStates.get( component );
+        boolean allAwakened = false;
 
-            if ( !state.awakened ) {
-                state.awakened = true;
+        while ( !allAwakened ) {
+            allAwakened = true;
 
-                component.onAwake();
+            for ( Component component : new ArrayList<>( this.components ) ) {
+                ComponentState state = this.componentStates.get( component );
+
+                if ( !state.awakened ) {
+                    allAwakened = false;
+
+                    state.awakened = true;
+
+                    component.onAwake();
+                }
             }
         }
 
