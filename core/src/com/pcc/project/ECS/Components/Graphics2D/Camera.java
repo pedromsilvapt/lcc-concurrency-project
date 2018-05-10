@@ -1,10 +1,7 @@
 package com.pcc.project.ECS.Components.Graphics2D;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.pcc.project.ECS.Component;
@@ -60,7 +57,7 @@ public class Camera extends Component {
     }
 
     public Vector2 screenToLocal ( Vector2 screen, Transform transform ) {
-        return transform.inverseTransformPoint( this.screenToGlobal( screen ) );
+        return transform.globalToLocalPoint( this.screenToGlobal( screen ) );
     }
 
     public Vector2 screenToLocal ( Vector2 screen, Entity entity ) {
@@ -79,6 +76,11 @@ public class Camera extends Component {
 
     public OrthographicCamera getCam () {
         if ( this.transform != null ) {
+            // TODO figure out a way to keep LibGDX's camera in sync with the global position and rotation of
+            // the transform component
+            // Also, maybe scaling could be viewed as zooming
+
+
 //            Vector2 gPos = this.transform.getGlobalPosition();
 //
 //            boolean update = false;

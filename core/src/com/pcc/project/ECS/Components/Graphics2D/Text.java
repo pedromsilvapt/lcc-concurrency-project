@@ -4,13 +4,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
-import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
-public class Text extends Component {
+public class Text extends VisualComponent {
     protected String value;
 
     protected BitmapFont bitmapFont;
@@ -21,11 +19,13 @@ public class Text extends Component {
 
     protected boolean autoSize = true;
 
-    protected float width;
-
     protected boolean wrap = false;
 
     protected String truncateText = "...";
+
+    protected Color color = Color.BLACK;
+
+    protected int textAlign = Align.center;
 
     /* Component Dependencies */
     protected Transform transform;
@@ -37,7 +37,7 @@ public class Text extends Component {
     }
 
     public Text setValue ( String value ) {
-        if ( this.value != value ) {
+        if ( this.value == null || !this.value.equals( value ) ) {
             this.value = value;
 
             this.needsRecache = true;
@@ -66,20 +66,18 @@ public class Text extends Component {
 
             return this.glyphLayout.width;
         } else {
-            return this.width;
+            return super.getSize().width;
         }
     }
 
-    public Text setWidth ( float width ) {
-        if ( this.width != width ) {
-            this.width = width;
+    public float getFullWidth () {
+        this.cache();
 
-            if ( !this.autoSize ) {
-                this.needsRecache = true;
-            }
+        if ( this.glyphLayout != null ) {
+            return this.glyphLayout.width;
         }
 
-        return this;
+        return 0;
     }
 
     public float getHeight () {
@@ -124,6 +122,65 @@ public class Text extends Component {
         return this;
     }
 
+    public Color getColor () {
+        return this.color;
+    }
+
+    public Text setColor ( Color color ) {
+        if ( this.color != color ) {
+            this.color = color;
+
+            this.needsRecache = true;
+        }
+
+        return this;
+    }
+
+    public Text setAlign ( int align ) {
+        if ( this.align != align ) {
+            super.setAlign( align );
+
+            this.needsRecache = true;
+        }
+
+        return this;
+    }
+
+    @Override
+    public Size getSize () {
+        if ( autoSize ) {
+            return new Size( this.getWidth(), this.getHeight() );
+        } else {
+            return super.getSize();
+        }
+    }
+
+    public Size getCustomSize () {
+        return super.getSize();
+    }
+
+    public Text setSize ( Size size ) {
+        super.setSize( size );
+
+        this.needsRecache = true;
+
+        return this;
+    }
+
+    public int getTextAlign () {
+        return this.textAlign;
+    }
+
+    public Text setTextAlign ( int align ) {
+        if ( this.textAlign != align ) {
+            this.textAlign = align;
+
+            this.needsRecache = true;
+        }
+
+        return this;
+    }
+
     public BitmapFont getBitmapFont () {
         return this.bitmapFont;
     }
@@ -155,11 +212,32 @@ public class Text extends Component {
             return;
         }
 
+        if ( this.glyphLayout == null ) {
+            this.glyphLayout = new GlyphLayout();
+        }
+
         if ( this.autoSize ) {
-            this.glyphLayout = new GlyphLayout( this.getBitmapFont(), this.getValue() );
-            this.glyphLayout.setText( this.getBitmapFont(), this.getValue(), Color.BLACK, this.glyphLayout.width, Align.center, this.wrap );
+            this.glyphLayout.setText(
+                    this.getBitmapFont(),
+                    this.getValue(),
+                    0, this.getValue().length(),
+                    this.color,
+                    0,
+                    this.textAlign,
+                    false,
+                    null
+            );
         } else {
-            this.glyphLayout = new GlyphLayout( this.getBitmapFont(), this.getValue(), 0, 0, Color.WHITE, this.width, Align.center, this.wrap, this.truncateText );
+            this.glyphLayout.setText(
+                    this.getBitmapFont(),
+                    this.getValue(),
+                    0, this.getValue().length(),
+                    this.color,
+                    this.getSize().width,
+                    this.textAlign,
+                    this.wrap,
+                    this.wrap ? null : this.truncateText
+            );
         }
 
         this.needsRecache = false;
@@ -189,9 +267,14 @@ public class Text extends Component {
         // here we would only draw the texture
 
         if ( this.glyphLayout != null ) {
-            Vector2 global = this.transform.getGlobalPosition();
+            this.renderer.debugRenderer.draw( Color.RED, this.getRectangle(), this.transform );
 
-            this.bitmapFont.draw( this.renderer.spriteBatch, this.glyphLayout, global.x, global.y );
+            Vector2 global = this.getGlobalAnchorPosition();
+
+            // TODO while the text is well positioned when aligned to the center, other
+            // possibly need more testing and tweaking
+
+            this.bitmapFont.draw( this.renderer.spriteBatch, this.glyphLayout, global.x, global.y + this.getSize().height / 2 + this.getHeight() / 2 );
         }
     }
 }

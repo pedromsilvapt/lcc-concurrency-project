@@ -133,7 +133,7 @@ public class Transform extends Component {
 
     public void setGlobalPosition ( Vector2 position ) {
         if ( this.parentTransform != null ) {
-            this.setPosition( this.parentTransform.inverseTransformPoint( position ) );
+            this.setPosition( this.parentTransform.globalToLocalPoint( position ) );
         } else {
             this.setPosition( position );
         }
@@ -149,7 +149,7 @@ public class Transform extends Component {
 
     public void setGlobalRotation ( float rotation ) {
         if ( this.parentTransform != null ) {
-            this.setRotation( this.parentTransform.inverseTransformRotation( rotation ) );
+            this.setRotation( this.parentTransform.globalToLocalRotation( rotation ) );
         } else {
             this.setRotation( rotation );
         }
@@ -165,7 +165,7 @@ public class Transform extends Component {
 
     public Transform setGlobalScale ( Vector2 scale ) {
         if ( this.parentTransform != null ) {
-            return this.setScale( this.parentTransform.inverseTransformVector( scale ) );
+            return this.setScale( this.parentTransform.globalToLocalVector( scale ) );
         } else {
             return this.setScale( scale );
         }
@@ -201,7 +201,7 @@ public class Transform extends Component {
     }
 
 
-    public Vector2 transformPoint ( Vector2 point ) {
+    public Vector2 localtoGlobalPoint ( Vector2 point ) {
         Matrix3 mat = this.matAux.set( this.getLocalToWorldMatrix() ).translate( point );
 
         return mat.getTranslation( new Vector2() );
@@ -211,7 +211,7 @@ public class Transform extends Component {
      * Transforms a local direction into a global direction
      * Directions are not affected by scale: the new direction will have the exact same length as the original one
      */
-    public Vector2 transformDirection ( Vector2 direction ) {
+    public Vector2 localtoGlobalDirection ( Vector2 direction ) {
         float degrees = this.localToWorldMatrix.getRotation();
 
         return new Vector2( direction ).rotate( degrees );
@@ -223,29 +223,29 @@ public class Transform extends Component {
      * a different length from the original one
      * @param vector
      */
-    public Vector2 transformVector ( Vector2 vector ) {
+    public Vector2 localToGlobalVector ( Vector2 vector ) {
         Matrix3 mat = this.getLocalToWorldMatrix();
 
         return new Vector2( vector ).scl( mat.getScale( new Vector2() ) );
     }
 
-    public Vector2 inverseTransformPoint ( Vector2 vector ) {
+    public Vector2 globalToLocalPoint ( Vector2 vector ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
         return this.matAux.set( mat ).translate( vector ).getTranslation( new Vector2(  ) );
     }
 
-    public Vector2 inverseTransformDirection ( Vector2 direction ) {
-        return direction.cpy().setAngle( this.inverseTransformRotation( direction.angle() ) );
+    public Vector2 globalToLocalDirection ( Vector2 direction ) {
+        return direction.cpy().setAngle( this.globalToLocalRotation( direction.angle() ) );
     }
 
-    public float inverseTransformRotation ( float rotation ) {
+    public float globalToLocalRotation ( float rotation ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
         return this.matAux.set( mat ).rotate( rotation ).getRotation();
     }
 
-    public Vector2 inverseTransformVector ( Vector2 vector ) {
+    public Vector2 globalToLocalVector ( Vector2 vector ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
         return this.matAux.set( mat ).scale( vector ).getScale( new Vector2(  ) );

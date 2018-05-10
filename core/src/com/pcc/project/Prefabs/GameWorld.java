@@ -4,6 +4,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcc.project.ECS.Components.Graphics2D.*;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.InputManager;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Textbox;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
@@ -82,7 +84,7 @@ public class GameWorld extends Prefab< Entity > {
         gui.addComponent( Camera.class, "camera", cameraGui ->  {
             cameraGui.setViewport( new ScreenViewport( cameraGui.getInternalCamera() ) );
         } );
-
+        gui.addComponent( InputManager.class );
 
         gui.instantiate( new GameObject( "button" ) )
                 .addComponent( Button.class, "button", button -> {
@@ -91,6 +93,13 @@ public class GameWorld extends Prefab< Entity > {
                     .setSize( 200, 49 );
                 } )
                 .getComponent( Transform.class ).setPosition( 10, 10 );
+
+
+        gui.instantiate( new GameObject( "textbox" ) )
+                .addComponent( Textbox.class, "textbox", button -> {
+                    button.setSize( 200, 49 );
+                } )
+                .getComponent( Transform.class ).setPosition( 10 + 200 + 10, 10 );
 
         gui.instantiate( new Cursor(), cursor -> cursor.setEnabled( false ) );
 

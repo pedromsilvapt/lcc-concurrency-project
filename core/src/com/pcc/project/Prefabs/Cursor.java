@@ -1,5 +1,6 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.SetToMouse;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -14,7 +15,7 @@ public class Cursor extends Prefab< Entity > {
 
         cursor.addComponent( Sprite.class, "spite" )
                 .setTexturePath( "uipack-space/PNG/cursor_pointer3D.png" )
-                .setAnchor( Sprite.Anchor.TopLeft );
+                .setAlign( Align.topLeft );
 
         cursor.addComponent( SetToMouse.class, "setToMouse" )
             .setCatchMouse( true );

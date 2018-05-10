@@ -1,7 +1,9 @@
 package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -58,13 +60,13 @@ public class Button extends InteractiveControl {
     }
 
     @Override
-    public Button setAnchor ( Sprite.Anchor anchor ) {
-        super.setAnchor( anchor );
+    public Button setAlign ( int align ) {
+        super.setAlign( align );
 
         if ( this.spriteStateNormal != null ) {
-            this.spriteStateNormal.setAnchor( anchor );
-            this.spriteStateHovered.setAnchor( anchor );
-            this.spriteStatePressed.setAnchor( anchor );
+            this.spriteStateNormal.setAlign( align );
+            this.spriteStateHovered.setAlign( align );
+            this.spriteStatePressed.setAlign( align );
         }
 
         return this;
@@ -104,13 +106,13 @@ public class Button extends InteractiveControl {
 
     public String getButtonStateCode ( ButtonState state ) {
         if ( this.shiny ) {
-            if ( state == ButtonState.Normal ) return "07";
-            else if ( state == ButtonState.Hovered ) return "11";
-            else return "08";
+            if ( state == ButtonState.Normal ) { return "07"; } else if ( state == ButtonState.Hovered ) {
+                return "11";
+            } else return "08";
         } else {
-            if ( state == ButtonState.Normal ) return "09";
-            else if ( state == ButtonState.Hovered ) return "11";
-            else return "10";
+            if ( state == ButtonState.Normal ) { return "09"; } else if ( state == ButtonState.Hovered ) {
+                return "11";
+            } else return "10";
         }
     }
 
@@ -124,12 +126,12 @@ public class Button extends InteractiveControl {
     public void onResize () {
         super.onResize();
 
-        Vector2 size = this.size.toVector2();
-
         if ( this.spriteStateNormal != null ) {
-            this.spriteStateNormal.setCustomSize( size );
-            this.spriteStateHovered.setCustomSize( size );
-            this.spriteStatePressed.setCustomSize( size );
+            this.spriteStateNormal.setSize( this.getSize() );
+            this.spriteStateHovered.setSize( this.getSize() );
+            this.spriteStatePressed.setSize( this.getSize() );
+
+            this.buttonLabelText.setSize( this.getSize() );
         }
     }
 
@@ -139,47 +141,45 @@ public class Button extends InteractiveControl {
 
         Sprite.PatchConfig buttonPatch = new Sprite.PatchConfig( 12, 12, 23, 21 );
 
-        Vector2 size = this.size.toVector2();
-
         this.spriteStateNormal = this.entity.addComponent( Sprite.class, "button_normal" );
         this.spriteStateNormal
                 .setNinePatchConfig( buttonPatch )
-                .setCustomSize( size )
-                .setAnchor( this.getAnchor() )
                 .setTexturePath( String.format( "uipack/PNG/%s.png", this.getButtonAssetName( ButtonState.Normal ) ) )
+                .setAlign( this.getAlign() )
+                .setSize( this.size )
                 .setEnabled( this.state == ButtonState.Normal );
 
         this.spriteStateHovered = this.entity.addComponent( Sprite.class, "button_hovered" );
         this.spriteStateHovered
                 .setNinePatchConfig( buttonPatch )
-                .setCustomSize( size )
-                .setAnchor( this.getAnchor() )
                 .setTexturePath( String.format( "uipack/PNG/%s.png", this.getButtonAssetName( ButtonState.Hovered ) ) )
+                .setAlign( this.getAlign() )
+                .setSize( this.size )
                 .setEnabled( this.state == ButtonState.Hovered );
 
         this.spriteStatePressed = this.entity.addComponent( Sprite.class, "button_pressed" );
         this.spriteStatePressed
                 .setNinePatchConfig( buttonPatch )
-                .setCustomSize( size )
-                .setAnchor( this.getAnchor() )
                 .setTexturePath( String.format( "uipack/PNG/%s.png", this.getButtonAssetName( ButtonState.Pressed ) ) )
+                .setAlign( this.getAlign() )
+                .setSize( this.size )
                 .setEnabled( this.state == ButtonState.Pressed );
 
-//        this.buttonLabelText = this.entity.addComponent( Text.class );
-//        this.buttonLabelText
-//                .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
-//                .setValue( "Test" );
-
-
         this.buttonLabel = this.entity.instantiate( new GameObject( "buttonLabel" ) );
+
+        this.buttonLabel.getComponent( Transform.class )
+                .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
 
         this.buttonLabelText = this.buttonLabel.addComponent( Text.class );
         this.buttonLabelText
                 .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
-                .setValue( "Test" );
-
-        this.buttonLabel.getComponent( Transform.class )
-                .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
+                .setValue( "Test" )
+                .setAutoSize( false )
+                .setWrap( false )
+                .setTruncateText( "..." )
+                .setColor( Color.WHITE )
+                .setAlign( Align.center )
+                .setSize( this.getSize() );
     }
 
     @Override

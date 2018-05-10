@@ -2,6 +2,7 @@ package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Entity;
 
@@ -10,9 +11,11 @@ public class InteractiveControl extends Control {
 
     protected boolean isMouseClicking = false;
 
-    protected boolean isFocusable = false;
+    protected boolean isFocusable = true;
 
     protected boolean isFocused = false;
+
+    protected InputManager inputManager;
 
     public InteractiveControl ( Entity entity, String name ) {
         super( entity, name );
@@ -26,13 +29,19 @@ public class InteractiveControl extends Control {
 
     public void onMouseRelease () { }
 
-    public void onFocus () { }
+    public void onFocus () {
+        Gdx.app.log( "Control", "Got Focus " + this.getClass().getName() );
+    }
 
-    public void onBlur () { }
+    public void onBlur () {
+        Gdx.app.log( "Control", "Lost Focus " + this.getClass().getName() );
+    }
 
     public void focus () {
         if ( !this.isFocused && this.isFocusable ) {
             this.isFocused = true;
+
+            this.inputManager.requestFocus( this );
 
             this.onFocus();
         }
@@ -42,8 +51,17 @@ public class InteractiveControl extends Control {
         if ( this.isFocused ) {
             this.isFocused = false;
 
+            this.inputManager.requestBlur( this );
+
             this.onBlur();
         }
+    }
+
+    @Override
+    public void onAwake () {
+        super.onAwake();
+
+        this.inputManager = this.entity.getComponentInParent( InputManager.class );
     }
 
     @Override
@@ -55,13 +73,13 @@ public class InteractiveControl extends Control {
 
         Vector2 global = this.getGlobalPosition( mX, mY );
 
-        Rect box = this.getBoundingBox();
+        Rectangle box = this.getGlobalRectangle();
 
-        if ( !this.isMouseOver && box.isWithin( global ) ) {
+        if ( !this.isMouseOver && box.contains( global ) ) {
             this.isMouseOver = true;
 
             this.onMouseEnter();
-        } else if ( this.isMouseOver && !box.isWithin( global ) ) {
+        } else if ( this.isMouseOver && !box.contains( global ) ) {
             this.isMouseOver = false;
 
             if ( this.isMouseClicking ) {

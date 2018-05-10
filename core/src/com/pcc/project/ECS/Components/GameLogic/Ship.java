@@ -1,6 +1,8 @@
 package com.pcc.project.ECS.Components.GameLogic;
 
+import com.badlogic.gdx.Gdx;
 import com.pcc.project.ECS.Component;
+import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Entity;
 
 /**
@@ -45,5 +47,21 @@ public class Ship extends Component {
     @Override
     public void onUpdate () {
         super.onUpdate();
+
+        boolean test = false;
+
+        // TODO remove test code
+
+        if ( test ) {
+            float d = Gdx.graphics.getDeltaTime() * 5;
+
+            this.entity.getComponent( Transform.class )
+                    .getPosition().add( 10 * d, 5 * d );
+
+            this.entity.getComponent( Transform.class )
+                    .setRotation( this.entity.getComponent( Transform.class ).getRotation() - ( 5 * d ) );
+
+            this.entity.getComponent( Transform.class ).invalidate();
+        }
     }
 }

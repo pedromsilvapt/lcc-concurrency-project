@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PccProject extends ApplicationAdapter {
     Entity gameWorld;
 
-    Camera camera;
+    protected int exceptionCount = 0;
 
     boolean customCursor = true;
 
@@ -38,9 +38,19 @@ public class PccProject extends ApplicationAdapter {
 
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
 
-        this.gameWorld.onAwake();
-        this.gameWorld.onUpdate();
-        this.gameWorld.onDraw();
+        try {
+            this.gameWorld.onAwake();
+            this.gameWorld.onUpdate();
+            this.gameWorld.onDraw();
+
+            exceptionCount = 0;
+        } catch ( Exception e ) {
+            if ( exceptionCount++ > 20 ) {
+                throw e;
+            } else {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.pcc.project.Prefabs;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.SetToMouse;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -47,7 +48,7 @@ public class AlienShip extends Prefab<Entity> {
 
         hullEntity.addComponent( Sprite.class, "sprite" )
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
-                .setAnchor( Sprite.Anchor.Center );
+                .setAlign( Align.center );
 
         return ship;
     }

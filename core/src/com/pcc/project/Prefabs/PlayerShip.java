@@ -1,5 +1,6 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.GameLogic.Player;
 import com.pcc.project.ECS.Components.GameLogic.Ship;
 import com.pcc.project.ECS.Components.Graphics2D.SetToMouse;
@@ -69,7 +70,7 @@ public class PlayerShip extends Prefab< Entity > {
         Entity engineEntity = ship.instantiate( new GameObject( "mainEngine" ) );
         engineEntity.addComponent( Sprite.class, "sprite" )
                 .setTexturePath( "spaceshooter/PNG/Effects/fire03.png" )
-                .setAnchor( Sprite.Anchor.Center );
+                .setAlign( Align.center );
         engineEntity.getComponent( Transform.class )
                 .setPosition( 0, -55 );
 
@@ -78,17 +79,17 @@ public class PlayerShip extends Prefab< Entity > {
         Entity shieldEntity = ship.instantiate( new GameObject( "shield" ) );
         shieldEntity.addComponent( Sprite.class, "sprite" )
                 .setTexturePath( "spaceshooter/PNG/Effects/shield3.png" )
-                .setAnchor( Sprite.Anchor.Center );
+                .setAlign( Align.center );
 
 
         /* HULL */
-        Entity hullEntity = ship.instantiate( new GameObject( "sprite" ) );
+        Entity hullEntity = ship.instantiate( new GameObject( "hull" ) );
         hullEntity.getComponent( Transform.class )
                 .setPosition( 0, -5 );
 
         hullEntity.addComponent( Sprite.class, "sprite" )
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
-                .setAnchor( Sprite.Anchor.Center );
+                .setAlign( Align.center );
 
         /* ShipState */
         ship.addComponent( Ship.class, "state" );
