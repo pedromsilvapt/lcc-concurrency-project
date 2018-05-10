@@ -3,6 +3,7 @@ package com.pcc.project.ECS.Components.Graphics2D.GUI;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
@@ -21,6 +22,8 @@ public class Textbox extends InteractiveControl {
     protected TimeStateMachine blinkingCursorState;
 
     protected String value = "";
+
+    protected String passwordChar = null;
 
     protected TextboxState state = TextboxState.Normal;
 
@@ -43,18 +46,52 @@ public class Textbox extends InteractiveControl {
         this.blinkingCursorState.addState( "on", 0.5f );
     }
 
+    public String getPasswordChar () {
+        return this.passwordChar;
+    }
+
+    public Textbox setPasswordChar ( String passwordChar ) {
+        this.passwordChar = passwordChar;
+
+        this.refreshLabel();
+
+        return this;
+    }
+
+    public Textbox setAlign ( int align ) {
+        if ( this.align != align ) {
+            super.setAlign( align );
+
+            if ( this.buttonLabel != null ) {
+                this.onAlign();
+            }
+        }
+        return this;
+    }
+
     public String getValue () {
         return this.value;
     }
 
     public Textbox setValue ( String value ) {
-        this.value = value;
+        if ( this.value != value ) {
+            this.value = value;
+
+            this.refreshLabel();
+        }
 
         return this;
     }
 
     public String getTextboxAssetName ( TextboxState state ) {
         return String.format( "grey_button05" );
+    }
+
+    public void onAlign () {
+        Vector2 anchor = this.getAnchorPosition();
+
+        this.buttonLabel.getComponent( Transform.class )
+                .setPosition( anchor.x + this.getSize().width / 2, anchor.y + this.getSize().height / 2 );
     }
 
     @Override
@@ -89,13 +126,12 @@ public class Textbox extends InteractiveControl {
 
         this.buttonLabel = this.entity.instantiate( new GameObject( "buttonLabel" ) );
 
-        this.buttonLabel.getComponent( Transform.class )
-                .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
+        this.onAlign();
 
         this.textboxLabelText = this.buttonLabel.addComponent( Text.class );
         this.textboxLabelText
                 .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
-                .setValue( "" )
+                .setValue( this.getValue() )
                 .setAutoSize( false )
                 .setWrap( false )
                 .setTruncateText( "" )
@@ -103,17 +139,29 @@ public class Textbox extends InteractiveControl {
                 .setTextAlign( Align.left )
                 .setAlign( Align.center )
                 .setSize( new Size( this.getSize().width - 35, this.getSize().height - 20 ) );
+
+        this.refreshLabel();
     }
 
     protected char getCharFromKey ( int key ) {
-        return (char)(key - Input.Keys.A + 'a');
+        return ( char ) ( key - Input.Keys.A + 'a' );
     }
 
     protected void refreshLabel () {
+        if ( this.blinkingCursorState == null || this.textboxLabelText == null ) {
+            return;
+        }
+
+        String value = this.getValue();
+
+        if ( this.getPasswordChar() != null ) {
+            value = new String( new char[ value.length() ] ).replace( "\0", this.passwordChar );
+        }
+
         if ( this.blinkingCursorState.getState().equals( "on" ) ) {
-            this.textboxLabelText.setValue( this.value + '|' );
+            this.textboxLabelText.setValue( value + '|' );
         } else {
-            this.textboxLabelText.setValue( this.value );
+            this.textboxLabelText.setValue( value );
         }
     }
 

@@ -1,6 +1,7 @@
 package com.pcc.project.ECS;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.pcc.project.Utils.SafeArrayList;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -51,9 +52,9 @@ public class Entity {
         this.parent = parent;
         this.name = name;
 
-        this.children = new ArrayList<>();
+        this.children = new SafeArrayList<>();
         this.componentStates = new HashMap<>();
-        this.components = new ArrayList<>(  );
+        this.components = new SafeArrayList<>(  );
     }
 
     public boolean getEnabled () {
@@ -172,10 +173,6 @@ public class Entity {
 
     public void destroyComponent ( Component component ) {
         if ( this.componentStates.containsKey( component ) ) {
-//            ComponentState state = this.componentStates.get( component );
-//
-//            state.destroyed = true;
-
             component.onDestroy();
 
             this.components.remove( component );
@@ -184,6 +181,7 @@ public class Entity {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public < T extends Component > T getComponent ( String name ) {
         for ( Component component : this.components ) {
             if ( component.name.equals( name ) ) {
@@ -194,6 +192,7 @@ public class Entity {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public < T extends Component > T getComponent ( Class< T > type ) {
         for ( Component component : this.components ) {
             if ( type.isAssignableFrom( component.getClass() ) ) {
@@ -234,6 +233,7 @@ public class Entity {
         return new ArrayList<>( this.components );
     }
 
+    @SuppressWarnings("unchecked")
     public < T extends Component > List< T > getComponents ( Class< T > type ) {
         return ( List< T > ) this.components.stream().filter( component -> type.isAssignableFrom( component.getClass() ) ).collect( Collectors.toList() );
     }
@@ -295,7 +295,7 @@ public class Entity {
         while ( !allAwakened ) {
             allAwakened = true;
 
-            for ( Component component : new ArrayList<>( this.components ) ) {
+            for ( Component component : this.components ) {
                 ComponentState state = this.componentStates.get( component );
 
                 if ( !state.awakened ) {
@@ -408,11 +408,11 @@ public class Entity {
     }
 
     public void onDestroy () {
-        for ( Component component : new ArrayList<>( this.components ) ) {
+        for ( Component component : this.components ) {
             this.destroyComponent( component );
         }
 
-        for ( Entity child : new ArrayList<>( this.children ) ) {
+        for ( Entity child : this.children ) {
             child.onDestroy();
         }
     }

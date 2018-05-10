@@ -10,6 +10,7 @@ import com.pcc.project.ECS.Components.Graphics2D.GUI.Textbox;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
+import com.pcc.project.Prefabs.GUI.LoginMenu;
 
 /**
  * This prefab is responsible for creating the global game.
@@ -113,6 +114,8 @@ public class GameWorld extends Prefab< Entity > {
                     button.setSize( 200, 49 );
                 } )
                 .getComponent( Transform.class ).setPosition( 10 + 200 + 10, 10 );
+
+        gui.instantiate( new LoginMenu() );
 
         gui.instantiate( new Cursor(), cursor -> cursor.setEnabled( false ) );
 

@@ -1,14 +1,16 @@
 package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Entity;
+import com.pcc.project.Prefabs.GUI.BaseStylesheet;
 import com.pcc.project.Prefabs.GameObject;
+
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class Button extends InteractiveControl {
     public static String defaultName = "button";
@@ -17,9 +19,15 @@ public class Button extends InteractiveControl {
         Normal, Hovered, Pressed
     }
 
+    protected String value = "Button";
+
+    protected Color color = Color.WHITE;
+
     protected Theme theme;
 
     protected boolean shiny;
+
+    protected Consumer<Button> action;
 
     /* SPRITE STATES */
 
@@ -41,6 +49,44 @@ public class Button extends InteractiveControl {
 
     public ButtonState getState () {
         return this.state;
+    }
+
+    public Consumer< Button > getAction () {
+        return action;
+    }
+
+    public Button setAction ( Consumer< Button > action ) {
+        this.action = action;
+
+        return this;
+    }
+
+    public String getValue () {
+        return this.value;
+    }
+
+    public Button setValue ( String value ) {
+        this.value = value;
+
+        if ( this.buttonLabelText != null ) {
+            this.buttonLabelText.setValue( value );
+        }
+
+        return this;
+    }
+
+    public Color getColor () {
+        return color;
+    }
+
+    public Button setColor ( Color color ) {
+        this.color = color;
+
+        if ( this.buttonLabelText != null ) {
+            this.buttonLabelText.setColor( this.color );
+        }
+
+        return this;
     }
 
     public Button setState ( ButtonState state ) {
@@ -104,16 +150,34 @@ public class Button extends InteractiveControl {
         }
     }
 
+    public String pad ( int number, int length, String c ) {
+        return String.format( "%" + c + length + "d", number );
+    }
+
     public String getButtonStateCode ( ButtonState state ) {
+        int offset = this.theme == Theme.Grey ? 1 : 0;
+
+        int code = 0;
+
         if ( this.shiny ) {
-            if ( state == ButtonState.Normal ) { return "07"; } else if ( state == ButtonState.Hovered ) {
-                return "11";
-            } else return "08";
+            if ( state == ButtonState.Normal ) {
+                code = 07;
+            } else if ( state == ButtonState.Hovered ) {
+                code = 11;
+            } else {
+                code = 8;
+            }
         } else {
-            if ( state == ButtonState.Normal ) { return "09"; } else if ( state == ButtonState.Hovered ) {
-                return "11";
-            } else return "10";
+            if ( state == ButtonState.Normal ) {
+                code = 9;
+            } else if ( state == ButtonState.Hovered ) {
+                code = 11;
+            } else {
+                code = 10;
+            }
         }
+
+        return this.pad( code + offset, 2, "0" );
     }
 
     public String getButtonAssetName ( ButtonState state ) {
@@ -172,14 +236,20 @@ public class Button extends InteractiveControl {
 
         this.buttonLabelText = this.buttonLabel.addComponent( Text.class );
         this.buttonLabelText
-                .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
-                .setValue( "Test" )
+                .setBitmapFont( BaseStylesheet.font )
+                .setValue( this.getValue() )
                 .setAutoSize( false )
                 .setWrap( false )
                 .setTruncateText( "..." )
-                .setColor( Color.WHITE )
+                .setColor( this.getColor() )
                 .setAlign( Align.center )
                 .setSize( this.getSize() );
+    }
+
+    public void onMousePress () {
+        if ( this.action != null ) {
+            this.action.accept( this );
+        }
     }
 
     @Override

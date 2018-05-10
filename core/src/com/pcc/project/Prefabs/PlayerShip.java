@@ -3,13 +3,11 @@ package com.pcc.project.Prefabs;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.GameLogic.Player;
 import com.pcc.project.ECS.Components.GameLogic.Ship;
-import com.pcc.project.ECS.Components.Graphics2D.SetToMouse;
+import com.pcc.project.ECS.Components.Graphics2D.Behavior.SetToMouse;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
-
-import java.awt.*;
 
 public class PlayerShip extends Prefab< Entity > {
     public enum ShipColor {
