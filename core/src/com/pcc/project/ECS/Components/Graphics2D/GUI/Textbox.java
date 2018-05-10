@@ -18,7 +18,7 @@ public class Textbox extends InteractiveControl {
         Normal, Hovered, Pressed
     }
 
-    protected TimeStateMachine blinkinCursorState;
+    protected TimeStateMachine blinkingCursorState;
 
     protected String value = "";
 
@@ -32,15 +32,15 @@ public class Textbox extends InteractiveControl {
 
     protected Entity buttonLabel;
 
-    protected Text buttonLabelText;
+    protected Text textboxLabelText;
 
     public Textbox ( Entity entity, String name ) {
         super( entity, name );
 
-        this.blinkinCursorState = new TimeStateMachine( true );
+        this.blinkingCursorState = new TimeStateMachine( true );
 
-        this.blinkinCursorState.addState( "off", 0.5f );
-        this.blinkinCursorState.addState( "on", 0.5f );
+        this.blinkingCursorState.addState( "off", 0.5f );
+        this.blinkingCursorState.addState( "on", 0.5f );
     }
 
     public String getValue () {
@@ -92,10 +92,10 @@ public class Textbox extends InteractiveControl {
         this.buttonLabel.getComponent( Transform.class )
                 .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
 
-        this.buttonLabelText = this.buttonLabel.addComponent( Text.class );
-        this.buttonLabelText
+        this.textboxLabelText = this.buttonLabel.addComponent( Text.class );
+        this.textboxLabelText
                 .setBitmapFont( "fonts/KenVector_Future_16_white.fnt" )
-                .setValue( "|" )
+                .setValue( "" )
                 .setAutoSize( false )
                 .setWrap( false )
                 .setTruncateText( "" )
@@ -110,19 +110,19 @@ public class Textbox extends InteractiveControl {
     }
 
     protected void refreshLabel () {
-        if ( this.blinkinCursorState.getState().equals( "on" ) ) {
-            this.buttonLabelText.setValue( this.value + '|' );
+        if ( this.blinkingCursorState.getState().equals( "on" ) ) {
+            this.textboxLabelText.setValue( this.value + '|' );
         } else {
-            this.buttonLabelText.setValue( this.value );
+            this.textboxLabelText.setValue( this.value );
         }
     }
 
     public void onFocus () {
-        this.blinkinCursorState.start();
+        this.blinkingCursorState.start();
     }
 
     public void onBlur () {
-        this.blinkinCursorState.start();
+        this.blinkingCursorState.start();
 
         this.refreshLabel();
     }
@@ -160,7 +160,7 @@ public class Textbox extends InteractiveControl {
                 this.removeChar();
             }
 
-            this.blinkinCursorState.update( Gdx.graphics.getDeltaTime() );
+            this.blinkingCursorState.update( Gdx.graphics.getDeltaTime() );
 
             this.refreshLabel();
         }

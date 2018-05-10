@@ -131,7 +131,7 @@ public class Renderer2D extends Component {
         super.onAwake();
 
         this.spriteBatch = new SpriteBatch();
-        this.debugRenderer = new DebugRenderer( false );
+        this.debugRenderer = new DebugRenderer( true );
     }
 
     @Override

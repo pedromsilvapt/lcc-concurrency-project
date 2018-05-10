@@ -48,7 +48,7 @@ public class Ship extends Component {
     public void onUpdate () {
         super.onUpdate();
 
-        boolean test = false;
+        boolean test = true;
 
         // TODO remove test code
 

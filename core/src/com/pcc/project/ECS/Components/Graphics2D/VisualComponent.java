@@ -4,7 +4,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Component;
-import com.pcc.project.ECS.Components.Graphics2D.GUI.Control;
 import com.pcc.project.ECS.Entity;
 
 public class VisualComponent extends Component {
@@ -30,38 +29,9 @@ public class VisualComponent extends Component {
         }
     }
 
-//    public static class Rect {
-//        public float x, y;
-//        public float width, height;
-//
-//        public Rect ( float x, float y, float width, float height ) {
-//            this.x = x;
-//            this.y = y;
-//            this.width = width;
-//            this.height = height;
-//        }
-//
-//        public Rect ( Control.Size pos, Control.Size size ) {
-//            this( pos.width, pos.height, size.width, size.height );
-//        }
-//
-//        public Rect ( Vector2 pos, Vector2 size ) {
-//            this( pos.x, pos.y, size.x, size.y );
-//        }
-//
-//        public boolean isWithin ( Vector2 point ) {
-//            boolean horizontal = point.x >= this.x && point.x <= this.x + this.width;
-//            boolean vertical   = point.y >= this.y && point.y <= this.y + this.height;
-//
-//            return horizontal && vertical;
-//        }
-//
-//        public String toString () {
-//            return String.format( "%f %f %f %f", this.x, this.y, this.width, this.height );
-//        }
-//    }
-
     protected int align = Align.bottomLeft;
+
+    protected Vector2 anchor = new Vector2( 0, 0 );
 
     protected Size size;
 
@@ -70,6 +40,20 @@ public class VisualComponent extends Component {
 
     public VisualComponent ( Entity entity, String name ) {
         super( entity, name );
+    }
+
+    public Vector2 getAnchor () {
+        return anchor;
+    }
+
+    public VisualComponent setAnchor ( Vector2 anchor ) {
+        this.anchor = anchor;
+
+        return this;
+    }
+
+    public VisualComponent setAnchor ( float x, float y ) {
+        return this.setAnchor( new Vector2( x, y ) );
     }
 
     public int getAlign () {
@@ -126,7 +110,7 @@ public class VisualComponent extends Component {
     }
 
     public Vector2 getAnchorPosition () {
-        return this.getAlignPosition().scl( -1 );
+        return this.getAlignPosition().scl( -1 ).add( this.anchor );
     }
 
     public Vector2 getGlobalAnchorPosition () {

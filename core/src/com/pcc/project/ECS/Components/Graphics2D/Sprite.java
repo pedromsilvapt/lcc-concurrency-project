@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Entity;
 
-public class Sprite extends VisualComponent {
+public class Sprite extends TexturedComponent {
     public static String defaultName = "sprite";
 
     public static class PatchConfig {
@@ -19,14 +19,6 @@ public class Sprite extends VisualComponent {
             this.bottom = bottom;
         }
     }
-
-    protected String texturePath;
-
-    protected Texture texture;
-
-    protected Texture.TextureWrap verticalWrap;
-
-    protected Texture.TextureWrap horizontalWrap;
 
     protected Color color = new Color( 1, 1, 1, 1 );
 
@@ -50,8 +42,10 @@ public class Sprite extends VisualComponent {
         return this.color.a;
     }
 
-    public void setOpacity ( float opacity ) {
+    public Sprite setOpacity ( float opacity ) {
         this.color.a = opacity;
+
+        return this;
     }
 
     public Size getSize () {
@@ -76,59 +70,8 @@ public class Sprite extends VisualComponent {
         return this.setNinePatchConfig( new PatchConfig( left, right, top, bottom ) );
     }
 
-    public Sprite setWrap ( Texture.TextureWrap vertical, Texture.TextureWrap horizontal ) {
-        this.verticalWrap = vertical;
-        this.horizontalWrap = horizontal;
-
-        if ( this.texture != null ) {
-            this.texture.setWrap( this.horizontalWrap, this.verticalWrap );
-        }
-
-        return this;
-    }
-
-    public String getTexturePath () {
-        return this.texturePath;
-    }
-
-    public Texture getTexture () {
-        if ( this.texture == null && texturePath != null ) {
-            this.reloadTextureFromPath();
-        }
-
-        return texture;
-    }
-
-    public Sprite setTexture ( Texture texture ) {
-        this.texturePath = null;
-
-        this.texture = texture;
-
-        return this;
-    }
-
-    public Sprite setTexturePath ( String texturePath ) {
-        if ( this.texturePath == null || !this.texturePath.equals( texturePath ) ) {
-            this.texturePath = texturePath;
-
-            this.texture = null;
-        }
-
-        return this;
-    }
-
     public Sprite ( Entity entity, String name ) {
         super( entity, name );
-    }
-
-    public void reloadTextureFromPath () {
-        this.texture = new Texture( this.texturePath );
-
-        if ( this.horizontalWrap != null && this.verticalWrap != null ) {
-            this.texture.setWrap( this.horizontalWrap, this.verticalWrap );
-        }
-
-        this.texture.setFilter( Texture.TextureFilter.Linear, Texture.TextureFilter.Linear );
     }
 
     @Override

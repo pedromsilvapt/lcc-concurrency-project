@@ -69,7 +69,7 @@ public class PlayerShip extends Prefab< Entity > {
         /* Main Engine */
         Entity engineEntity = ship.instantiate( new GameObject( "mainEngine" ) );
         engineEntity.addComponent( Sprite.class, "sprite" )
-                .setTexturePath( "spaceshooter/PNG/Effects/fire03.png" )
+                .setTexturePath( "spaceshooter/PNG/Effects/fire12.png" )
                 .setAlign( Align.center );
         engineEntity.getComponent( Transform.class )
                 .setPosition( 0, -55 );
@@ -78,7 +78,8 @@ public class PlayerShip extends Prefab< Entity > {
         /* Shield */
         Entity shieldEntity = ship.instantiate( new GameObject( "shield" ) );
         shieldEntity.addComponent( Sprite.class, "sprite" )
-                .setTexturePath( "spaceshooter/PNG/Effects/shield3.png" )
+                .setOpacity( 0.4f )
+                .setTexturePath( "spaceshooter/PNG/Effects/shield2.png" )
                 .setAlign( Align.center );
 
 

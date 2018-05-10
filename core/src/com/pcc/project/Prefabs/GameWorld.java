@@ -1,5 +1,6 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcc.project.ECS.Components.Graphics2D.*;
@@ -42,6 +43,18 @@ public class GameWorld extends Prefab< Entity > {
     @Override
     public Entity instantiate () {
         Entity gameWorld = new GameObject().instantiate();
+
+        /* Background */
+        Entity background = gameWorld.instantiate( new GameObject( "background" ) );
+        background.addComponent( Renderer2D.class, "renderer" );
+        background.instantiate( new GameObject( "camera" ), entity -> {
+            entity.addComponent( Camera.class, "camera", camera -> {
+                camera.setViewport( new ScreenViewport( camera.getInternalCamera() ) );
+            } );
+        } );
+        background.addComponent( BackgroundSprite.class )
+                .setTexturePath( "spaceshooter/Backgrounds/darkPurple.png" )
+                .setSize( 2000, 2000 );
 
         /* Board Entities */
         Entity board = gameWorld.instantiate( new GameObject( "board" ) );
