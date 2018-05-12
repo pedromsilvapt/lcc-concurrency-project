@@ -165,11 +165,17 @@ public class Textbox extends InteractiveControl {
         }
     }
 
+    @Override
     public void onFocus () {
+        super.onFocus();
+
         this.blinkingCursorState.start();
     }
 
+    @Override
     public void onBlur () {
+        super.onBlur();
+
         this.blinkingCursorState.start();
 
         this.refreshLabel();

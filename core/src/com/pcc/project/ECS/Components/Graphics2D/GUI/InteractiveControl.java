@@ -107,4 +107,11 @@ public class InteractiveControl extends Control {
             }
         }
     }
+
+    @Override
+    public void onDestroy () {
+        super.onDestroy();
+
+        this.blur();
+    }
 }

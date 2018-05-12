@@ -51,7 +51,9 @@ public class BackgroundSprite extends TexturedComponent {
     public void onAwake () {
         super.onAwake();
 
-        this.calculateTiles();
+        if ( this.getTexture() != null ) {
+            this.calculateTiles();
+        }
     }
 
     public void onTextureLoad () {

@@ -13,19 +13,130 @@ import com.pcc.project.ECS.Entity;
 import java.util.ArrayList;
 
 public class Renderer2D extends Component {
-    class DebugRendererItem {
+    public abstract class DebugRendererItem {
         public Color     color;
-        public Rectangle rect;
         public Transform transform;
 
-        public DebugRendererItem ( Color color, Rectangle rect, Transform transform ) {
+        public DebugRendererItem ( Color color, Transform transform ) {
             this.color = color;
-            this.rect = rect;
             this.transform = transform;
+        }
+
+        public void renderShape ( ShapeRenderer renderer, Vector2[] points ) {
+            Vector2 v1, v2;
+
+            for ( int i = 1; i <= points.length; i++ ) {
+                v1 = transform.localtoGlobalPoint( points[ ( i - 1 ) % points.length ] );
+                v2 = transform.localtoGlobalPoint( points[ i % points.length ] );
+
+                renderer.line( v1.x, v1.y, v2.x, v2.y, color, color );
+            }
+        }
+
+        public abstract void render ( ShapeRenderer renderer );
+    }
+
+    public class DebugRendererRectangle extends DebugRendererItem {
+        public Rectangle rectangle;
+
+        public DebugRendererRectangle ( Color color, Rectangle rectangle, Transform transform ) {
+            super( color, transform );
+
+            this.rectangle = rectangle;
+        }
+
+        @Override
+        public void render ( ShapeRenderer renderer ) {
+            Vector2 localPosition = rectangle.getPosition( new Vector2() );
+            Vector2 localSize     = rectangle.getSize( new Vector2() );
+
+            // Top Left
+            Vector2 tl = new Vector2( localPosition.x, localPosition.y );
+            // Top Right
+            Vector2 tr = new Vector2( localPosition.x + localSize.x, localPosition.y );
+            // Bottom Right
+            Vector2 br = new Vector2( localPosition.x + localSize.x, localPosition.y + localSize.y );
+            // Bottom Left
+            Vector2 bl = new Vector2( localPosition.x, localPosition.y + localSize.y );
+
+            this.renderShape( renderer, new Vector2[] { tl, tr, br, bl } );
         }
     }
 
-    class DebugRenderer implements Disposable {
+    class DebugRendererPoint extends DebugRendererItem {
+        Vector2 point;
+
+        public DebugRendererPoint ( Color color, Vector2 point, Transform transform ) {
+            super( color, transform );
+
+            this.point = point;
+        }
+
+        @Override
+        public void render ( ShapeRenderer renderer ) {
+            Vector2 scale = this.transform.getGlobalScale();
+
+            Vector2 size = scale.cpy().scl( 10 );
+
+            this.renderShape( renderer, new Vector2[] {
+                    new Vector2( this.point.x, this.point.y - size.y ),
+                    new Vector2( this.point.x, this.point.y + size.y )
+            } );
+
+            this.renderShape( renderer, new Vector2[] {
+                    new Vector2( this.point.x - size.x, this.point.y ),
+                    new Vector2( this.point.x + size.x, this.point.y )
+            } );
+        }
+    }
+
+    class DebugRendererVector extends DebugRendererItem {
+        Vector2 origin;
+        Vector2 vector;
+
+        public DebugRendererVector ( Color color, Vector2 origin, Vector2 vector, Transform transform ) {
+            super( color, transform );
+
+            this.origin = origin;
+            this.vector = vector;
+        }
+
+        @Override
+        public void render ( ShapeRenderer renderer ) {
+            Vector2 scale = this.transform.getGlobalScale();
+
+            Vector2 tip = this.origin.cpy().add( this.vector );
+
+            Vector2 tipLeft = tip.cpy().add(
+                    tip.cpy().sub(this.origin).nor().rotate( 180 - 45 )
+                            .scl( scale )
+                            .scl( 20 )
+            );
+
+            Vector2 tipRight = tip.cpy().add(
+                    tip.cpy().sub(this.origin).nor().rotate( 180 + 45 )
+                            .scl( scale )
+                            .scl( 20 )
+            );
+
+            this.renderShape( renderer, new Vector2[] {
+                    this.origin.cpy(),
+                    tip.cpy()
+            } );
+
+            this.renderShape( renderer, new Vector2[] {
+                    tip.cpy(),
+                    tipLeft
+            } );
+
+            this.renderShape( renderer, new Vector2[] {
+                    tip.cpy(),
+                    tipRight
+            } );
+        }
+    }
+
+    public class DebugRenderer implements Disposable {
         boolean enabled = false;
 
         ShapeRenderer shapeRenderer = new ShapeRenderer();
@@ -45,18 +156,23 @@ public class Renderer2D extends Component {
                 return;
             }
 
-            this.items.add( new DebugRendererItem( color, rect, transform ) );
+            this.items.add( new DebugRendererRectangle( color, rect, transform ) );
         }
 
-        public void flushPoints ( Color color, Vector2[] points, Transform transform ) {
-            Vector2 v1, v2;
-
-            for ( int i = 1; i <= points.length; i++ ) {
-                v1 = transform.localtoGlobalPoint( points[ ( i - 1 ) % points.length ] );
-                v2 = transform.localtoGlobalPoint( points[ i % points.length ] );
-
-                this.shapeRenderer.line( v1.x, v1.y, v2.x, v2.y, color, color );
+        public void drawPoint ( Color color, Vector2 point, Transform transform ) {
+            if ( !enabled ) {
+                return;
             }
+
+            this.items.add( new DebugRendererPoint( color, point, transform ) );
+        }
+
+        public void drawVector ( Color color, Vector2 origin, Vector2 vector, Transform transform ) {
+            if ( !enabled ) {
+                return;
+            }
+
+            this.items.add( new DebugRendererVector( color, origin, vector, transform ) );
         }
 
         public void flush ( Camera camera ) {
@@ -77,19 +193,7 @@ public class Renderer2D extends Component {
             this.shapeRenderer.setProjectionMatrix( camera.getInternalCamera().combined );
 
             for ( DebugRendererItem item : this.items ) {
-                Vector2 localPosition = item.rect.getPosition( new Vector2() );
-                Vector2 localSize     = item.rect.getSize( new Vector2() );
-
-                // Top Left
-                corners[ 0 ].set( localPosition.x, localPosition.y );
-                // Top Right
-                corners[ 1 ].set( localPosition.x + localSize.x, localPosition.y );
-                // Bottom Right
-                corners[ 2 ].set( localPosition.x + localSize.x, localPosition.y + localSize.y );
-                // Bottom Left
-                corners[ 3 ].set( localPosition.x, localPosition.y + localSize.y );
-
-                this.flushPoints( item.color, corners, item.transform );
+                item.render( shapeRenderer );
             }
 
             this.shapeRenderer.end();
@@ -106,9 +210,13 @@ public class Renderer2D extends Component {
 
     public static String defaultName = "renderer2D";
 
+    public int toggleDebugKey = 0;
+
     public SpriteBatch spriteBatch;
 
     public DebugRenderer debugRenderer;
+
+    public boolean enableDebug;
 
     public int width = 0;
 
@@ -116,6 +224,26 @@ public class Renderer2D extends Component {
 
     public Renderer2D ( Entity entity, String name ) {
         super( entity, name );
+    }
+
+    public boolean getEnableDebug () {
+        return this.enableDebug;
+    }
+
+    public Renderer2D setEnableDebug ( boolean enableDebug ) {
+        this.enableDebug = enableDebug;
+
+        return this;
+    }
+
+    public int getDebugKey () {
+        return this.toggleDebugKey;
+    }
+
+    public Renderer2D setDebugKey ( int key ) {
+        this.toggleDebugKey = key;
+
+        return this;
     }
 
     public Camera getCamera () {
@@ -131,7 +259,7 @@ public class Renderer2D extends Component {
         super.onAwake();
 
         this.spriteBatch = new SpriteBatch();
-        this.debugRenderer = new DebugRenderer( false );
+        this.debugRenderer = new DebugRenderer( this.enableDebug );
     }
 
     @Override
@@ -160,7 +288,15 @@ public class Renderer2D extends Component {
             this.spriteBatch.setProjectionMatrix( camera.getCam().combined );
         }
 
+        if ( this.spriteBatch.isDrawing() ) {
+            this.spriteBatch.end();
+        }
+
         this.spriteBatch.begin();
+
+        if ( this.toggleDebugKey > 0 && Gdx.input.isKeyJustPressed( this.toggleDebugKey ) ) {
+            this.debugRenderer.enabled = !this.debugRenderer.enabled;
+        }
     }
 
     @Override

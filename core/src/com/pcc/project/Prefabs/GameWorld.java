@@ -1,8 +1,11 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.pcc.project.ECS.Components.AssetsLoader.AssetsLoader;
+import com.pcc.project.ECS.Components.GameLogic.Ship;
 import com.pcc.project.ECS.Components.Graphics2D.*;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.InputManager;
@@ -11,6 +14,7 @@ import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 import com.pcc.project.Prefabs.GUI.LoginMenu;
+import com.pcc.project.Prefabs.GUI.PlayerHud;
 
 /**
  * This prefab is responsible for creating the global game.
@@ -23,12 +27,14 @@ public class GameWorld extends Prefab< Entity > {
 
     protected boolean customCursor;
 
+    protected boolean enabledDebug;
+
     public GameWorld () {
         this( false );
     }
 
     public GameWorld ( boolean customCursor ) {
-        this( customCursor,1000, 1000 );
+        this( customCursor,700, 700 );
     }
 
     public GameWorld ( int worldWidth, int worldHeight ) {
@@ -41,13 +47,23 @@ public class GameWorld extends Prefab< Entity > {
         this.worldHeight = worldHeight;
     }
 
+    public GameWorld setEnabledDebug ( boolean enabledDebug ) {
+        this.enabledDebug = enabledDebug;
+
+        return this;
+    }
+
     @Override
     public Entity instantiate () {
         Entity gameWorld = new GameObject().instantiate();
 
+        gameWorld.addComponent( AssetsLoader.class );
+
         /* Background */
         Entity background = gameWorld.instantiate( new GameObject( "background" ) );
-        background.addComponent( Renderer2D.class, "renderer" );
+        background.addComponent( Renderer2D.class, "renderer" )
+            .setEnableDebug( this.enabledDebug )
+            .setDebugKey( Input.Keys.F9 );
         background.instantiate( new GameObject( "camera" ), entity -> {
             entity.addComponent( Camera.class, "camera", camera -> {
                 camera.setViewport( new ScreenViewport( camera.getInternalCamera() ) );
@@ -59,7 +75,9 @@ public class GameWorld extends Prefab< Entity > {
 
         /* Board Entities */
         Entity board = gameWorld.instantiate( new GameObject( "board" ) );
-        board.addComponent( Renderer2D.class, "renderer" );
+        board.addComponent( Renderer2D.class, "renderer" )
+                .setEnableDebug( this.enabledDebug )
+                .setDebugKey( Input.Keys.F9 );
 
         /* Camera */
         Entity cameraEntity = board.instantiate( new GameObject( "camera" ) );
@@ -69,7 +87,6 @@ public class GameWorld extends Prefab< Entity > {
 
         board.instantiate( new PlayerShip( "player", PlayerShip.ShipColor.Blue, true ) )
             .getComponent( Transform.class ).setPosition( 100, 100 );
-
 
         board.instantiate( new PlayerShip( "enemy1", PlayerShip.ShipColor.Green ) )
             .getComponent( Transform.class ).setPosition( 300, 100 );
@@ -92,30 +109,23 @@ public class GameWorld extends Prefab< Entity > {
         board.instantiate( new AlienShip( "alien4", AlienShip.ShipColor.Red ) )
                 .getComponent( Transform.class ).setPosition( 700, 300 );
 
+        Ship playerShip = board.getEntity( "player" ).getComponent( Ship.class );
 
         Entity gui = gameWorld.instantiate( new GameObject( "gui" ) );
-        gui.addComponent( Renderer2D.class, "renderer" );
+//        gui.setEnabled( false );
+        gui.addComponent( Renderer2D.class, "renderer" )
+                .setEnableDebug( this.enabledDebug )
+                .setDebugKey( Input.Keys.F9 );
         gui.addComponent( Camera.class, "camera", cameraGui ->  {
             cameraGui.setViewport( new ScreenViewport( cameraGui.getInternalCamera() ) );
         } );
         gui.addComponent( InputManager.class );
 
-        gui.instantiate( new GameObject( "button" ) )
-                .addComponent( Button.class, "button", button -> {
-                    button.setTheme( Theme.Blue )
-                    .setShiny( true )
-                    .setSize( 200, 49 );
-                } )
-                .getComponent( Transform.class ).setPosition( 10, 10 );
-
-
-        gui.instantiate( new GameObject( "textbox" ) )
-                .addComponent( Textbox.class, "textbox", button -> {
-                    button.setSize( 200, 49 );
-                } )
-                .getComponent( Transform.class ).setPosition( 10 + 200 + 10, 10 );
+//        gui.instantiate( new GameObject( 0class ).setPosition( 10 + 200 + 10, 10 );
 
         gui.instantiate( new LoginMenu() );
+
+        gui.instantiate( new PlayerHud( playerShip ) );
 
         gui.instantiate( new Cursor(), cursor -> cursor.setEnabled( false ) );
 

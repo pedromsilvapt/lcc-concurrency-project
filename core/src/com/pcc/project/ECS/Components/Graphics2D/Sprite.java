@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.math.Vector2;
+import com.pcc.project.ECS.Components.AssetsLoader.AssetsLoader;
 import com.pcc.project.ECS.Entity;
 
 public class Sprite extends TexturedComponent {
@@ -28,7 +29,7 @@ public class Sprite extends TexturedComponent {
 
     protected Renderer2D renderer;
 
-    protected Transform transform;
+    protected AssetsLoader assetsLoader;
 
     public Color getColor () {
         return color;
@@ -79,7 +80,6 @@ public class Sprite extends TexturedComponent {
         super.onAwake();
 
         this.renderer = this.entity.getComponentInParent( Renderer2D.class );
-        this.transform = this.entity.getComponent( Transform.class );
     }
 
     @Override
@@ -101,6 +101,10 @@ public class Sprite extends TexturedComponent {
             int height = this.size != null ? ( int ) this.size.height : texture.getHeight();
 
             this.renderer.debugRenderer.draw( this.getRectangle(), this.transform );
+
+            this.renderer.debugRenderer.drawPoint( Color.BLUE, this.transform.getPosition(), this.transform );
+
+            this.renderer.debugRenderer.drawVector( Color.RED, this.getAnchorPosition(), this.transform.getForward().scl( 30 ), this.transform );
 
             if ( this.patchConfig != null ) {
                 NinePatch patch = new NinePatch( this.texture, this.patchConfig.left, this.patchConfig.right, this.patchConfig.top, this.patchConfig.bottom );

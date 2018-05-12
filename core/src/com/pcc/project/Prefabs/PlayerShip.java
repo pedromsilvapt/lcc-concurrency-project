@@ -90,10 +90,11 @@ public class PlayerShip extends Prefab< Entity > {
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
                 .setAlign( Align.center );
 
-        /* ShipState */
-        ship.addComponent( Ship.class, "state" );
-
         if ( this.isPlayer ) {
+            /* ShipState */
+            ship.addComponent( Ship.class, "state" )
+                    .mainEngineSprite = engineEntity.getComponent( "sprite" );
+
             ship.addComponent( Player.class, "player" );
         }
 

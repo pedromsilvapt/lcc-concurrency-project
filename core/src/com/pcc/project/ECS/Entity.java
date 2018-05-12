@@ -181,6 +181,44 @@ public class Entity {
         }
     }
 
+    public Entity getEntity ( String name ) {
+        for ( Entity entity : this.children ) {
+            if ( entity.name != null && entity.name.equals( name ) ) {
+                return entity;
+            }
+        }
+
+        return null;
+    }
+
+    public Entity getEntityInChildren ( String name ) {
+        Entity entity = this.getEntity( name );
+
+        if ( entity == null ) {
+            for ( Entity child : this.children ) {
+                entity = child.getEntityInChildren( name );
+
+                if ( entity != null ) {
+                    break;
+                }
+            }
+        }
+
+        return entity;
+    }
+
+    public Entity getEntityInParent ( String name ) {
+        if ( this.name != null && this.name.equals( name ) ) {
+            return this;
+        }
+
+        if ( this.parent != null ) {
+            return this.getEntityInParent( name );
+        }
+
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     public < T extends Component > T getComponent ( String name ) {
         for ( Component component : this.components ) {
@@ -390,7 +428,9 @@ public class Entity {
     public void onDraw () {
         if ( this.enabled ) {
             for ( Component component : this.components ) {
-                if ( component.enabled ) {
+                ComponentState state = this.componentStates.get( component );
+
+                if ( component.enabled && state.awakened ) {
                     component.onDraw();
                 }
             }
@@ -400,7 +440,9 @@ public class Entity {
             }
 
             for ( Component component : this.components ) {
-                if ( component.enabled ) {
+                ComponentState state = this.componentStates.get( component );
+
+                if ( component.enabled && state.awakened ) {
                     component.onAfterDraw();
                 }
             }

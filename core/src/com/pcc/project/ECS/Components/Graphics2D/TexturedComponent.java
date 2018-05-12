@@ -1,7 +1,12 @@
 package com.pcc.project.ECS.Components.Graphics2D;
 
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.pcc.project.ECS.Components.AssetsLoader.AssetsLoader;
 import com.pcc.project.ECS.Entity;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 public class TexturedComponent extends VisualComponent {
     protected String texturePath;
@@ -12,6 +17,10 @@ public class TexturedComponent extends VisualComponent {
 
     protected Texture.TextureWrap horizontalWrap;
 
+    protected AssetsLoader assetsLoader;
+
+    protected CompletableFuture<Pixmap> futureTexture;
+
     public TexturedComponent ( Entity entity, String name ) {
         super( entity, name );
     }
@@ -21,15 +30,29 @@ public class TexturedComponent extends VisualComponent {
     }
 
     public void reloadTextureFromPath () {
-        this.texture = new Texture( this.texturePath );
-
-        if ( this.horizontalWrap != null && this.verticalWrap != null ) {
-            this.texture.setWrap( this.horizontalWrap, this.verticalWrap );
+        if ( this.futureTexture != null ) {
+            return;
         }
 
-        this.texture.setFilter( Texture.TextureFilter.Linear, Texture.TextureFilter.Linear );
+        if ( this.assetsLoader != null ) {
+            this.futureTexture = this.assetsLoader.loadTexture( this.texturePath );
+        } else {
+            Texture texture = new Texture( this.texturePath );
+
+            this.setTextureInternal( texture );
+        }
+    }
+
+    private void setTextureInternal ( Texture texture ) {
+        this.texture = texture;
 
         if ( this.texture != null ) {
+            if ( this.horizontalWrap != null && this.verticalWrap != null ) {
+                this.texture.setWrap( this.horizontalWrap, this.verticalWrap );
+            }
+
+            this.texture.setFilter( Texture.TextureFilter.Linear, Texture.TextureFilter.Linear );
+
             this.onTextureLoad();
         }
     }
@@ -42,6 +65,22 @@ public class TexturedComponent extends VisualComponent {
         return texture;
     }
 
+    public Texture getTextureSync () {
+        Texture texture = this.texture;
+
+        if ( texture == null && this.futureTexture != null ) {
+            try {
+                this.setTextureInternal( new Texture( this.futureTexture.get() ) );
+            } catch ( InterruptedException | ExecutionException e ) {
+                e.printStackTrace();
+            }
+
+            this.futureTexture = null;
+        }
+
+        return this.texture;
+    }
+
     public TexturedComponent setTexture ( Texture texture ) {
         // If we alread have a texture loaded, but it was provided by a path
         // That means we (this instance of the class) loaded it, and therefore we own it
@@ -50,13 +89,14 @@ public class TexturedComponent extends VisualComponent {
             this.texture.dispose();
         }
 
+        if ( this.futureTexture != null ) {
+//            this.futureTexture.cancel( true );
+            this.futureTexture = null;
+        }
+
         this.texturePath = null;
 
-        if ( this.texture != texture ) {
-            this.texture = texture;
-
-            this.onTextureLoad();
-        }
+        this.setTextureInternal( texture );
 
         return this;
     }
@@ -92,4 +132,20 @@ public class TexturedComponent extends VisualComponent {
     }
 
     public void onTextureLoad () {  }
+
+    @Override
+    public void onAwake () {
+        super.onAwake();
+
+        this.assetsLoader = this.entity.getComponentInParent( AssetsLoader.class );
+    }
+
+    @Override
+    public void onUpdate () {
+        super.onUpdate();
+
+        if ( this.futureTexture != null && this.futureTexture.isDone() ) {
+            this.getTextureSync();
+        }
+    }
 }

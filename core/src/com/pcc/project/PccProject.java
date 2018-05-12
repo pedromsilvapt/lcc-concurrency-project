@@ -14,13 +14,20 @@ import java.util.concurrent.locks.ReentrantLock;
 public class PccProject extends ApplicationAdapter {
     Entity gameWorld;
 
-    protected int exceptionCount = 0;
+    GameEngine engine;
 
     boolean customCursor = true;
 
+    boolean enableDebug = false;
+
     @Override
     public void create () {
-        this.gameWorld = new GameWorld( this.customCursor ).instantiate();
+        this.engine = new GameEngine();
+
+        this.enableDebug = System.getProperty( "debug", "false" ).equalsIgnoreCase( "true" );
+
+        this.engine.getRoot().instantiate( new GameWorld( this.customCursor, 2000, 2000 )
+                .setEnabledDebug( this.enableDebug ) );
     }
 
     @Override
@@ -32,29 +39,11 @@ public class PccProject extends ApplicationAdapter {
     public void render () {
         Gdx.graphics.setTitle( "Pcc Project " + Gdx.graphics.getFramesPerSecond() );
 
-//        Gdx.input.setCursorCatched( this.customCursor );
-
-        Gdx.gl.glClearColor( 0.8f, 0.8f, 0.8f, 1 );
-
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT | (Gdx.graphics.getBufferFormat().coverageSampling?GL20.GL_COVERAGE_BUFFER_BIT_NV:0));
-
-        try {
-            this.gameWorld.onAwake();
-            this.gameWorld.onUpdate();
-            this.gameWorld.onDraw();
-
-            exceptionCount = 0;
-        } catch ( Exception e ) {
-            if ( exceptionCount++ > 20 ) {
-                throw e;
-            } else {
-                e.printStackTrace();
-            }
-        }
+        this.engine.render();
     }
 
     @Override
     public void dispose () {
-        this.gameWorld.onDestroy();
+        this.engine.dispose();
     }
 }

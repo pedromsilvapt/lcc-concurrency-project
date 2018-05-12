@@ -200,6 +200,10 @@ public class Transform extends Component {
         this.isMatrixValid = true;
     }
 
+    public Vector2 getForward () {
+        return new Vector2( 1, 0 ).setAngle( this.rotation );
+    }
+
 
     public Vector2 localtoGlobalPoint ( Vector2 point ) {
         Matrix3 mat = this.matAux.set( this.getLocalToWorldMatrix() ).translate( point );

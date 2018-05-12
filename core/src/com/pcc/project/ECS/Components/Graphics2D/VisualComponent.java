@@ -80,7 +80,7 @@ public class VisualComponent extends Component {
         return this.setSize( new Size( width, height ) );
     }
 
-    private Vector2 getAlignPosition () {
+    public Vector2 getAlignPosition () {
         Size size = this.getSize() == null ? new Size() : this.getSize();
 
         float w = size.width;
@@ -139,6 +139,6 @@ public class VisualComponent extends Component {
     public void onAwake () {
         super.onAwake();
 
-        this.transform = this.entity.getComponent( Transform.class );
+        this.transform = this.entity.getComponentInParent( Transform.class );
     }
 }
