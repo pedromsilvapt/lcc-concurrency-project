@@ -274,6 +274,8 @@ public class Text extends VisualComponent {
             // TODO while the text is well positioned when aligned to the center, other
             // possibly need more testing and tweaking
 
+            this.renderer.setMode( Renderer2D.RendererMode.Sprite );
+
             this.bitmapFont.draw( this.renderer.spriteBatch, this.glyphLayout, global.x, global.y + this.getSize().height / 2 + this.getHeight() / 2 );
         }
     }

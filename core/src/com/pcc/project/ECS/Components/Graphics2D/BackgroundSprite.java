@@ -2,7 +2,6 @@ package com.pcc.project.ECS.Components.Graphics2D;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
-import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
 import java.util.ArrayList;

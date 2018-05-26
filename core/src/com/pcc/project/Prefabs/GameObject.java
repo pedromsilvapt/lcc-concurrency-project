@@ -17,11 +17,29 @@ public class GameObject extends Prefab< Entity > {
     protected float rotation = 0;
 
     public GameObject () {
-        this( null );
+        this( (String)null );
     }
 
     public GameObject ( String name ) {
         this( name, null, null, 0 );
+    }
+
+    public GameObject ( String name, Vector2 position ) {
+        this( name );
+
+        this.position = position;
+    }
+
+    public GameObject ( Vector2 position ) {
+        this.position = position;
+    }
+
+    public GameObject ( float x, float y ) {
+        this( new Vector2( x, y ) );
+    }
+
+    public GameObject ( String name, float x, float y ) {
+        this( name, new Vector2( x, y ) );
     }
 
     public GameObject ( String name, Vector2 position, Vector2 scale, float rotation ) {

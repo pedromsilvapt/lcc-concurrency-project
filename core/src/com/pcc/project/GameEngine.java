@@ -42,7 +42,5 @@ public class GameEngine implements Disposable {
     @Override
     public void dispose () {
         this.root.destroy();
-
-
     }
 }

@@ -1,12 +1,19 @@
-package com.pcc.project.ECS.Components.Network;
+package com.pcc.project.ECS.Components.Network.Entities;
 
 import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
+import com.pcc.project.ECS.Prefab;
 
-public class NetworkEntity extends Component {
-    protected String entityId;
+import java.util.Map;
+
+public abstract class NetworkEntity extends Component {
+    public static Prefab<Entity> createPrefab ( Map<String, String> message ) {
+        return null;
+    }
 
     protected String entityType;
+
+    protected String entityId;
 
     public NetworkEntity ( Entity entity, String name ) {
         super( entity, name );
@@ -31,4 +38,6 @@ public class NetworkEntity extends Component {
 
         return this;
     }
+
+    public abstract void obey ( Map<String, String> entity );
 }

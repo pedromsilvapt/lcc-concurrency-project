@@ -1,10 +1,13 @@
 package com.pcc.project.ECS.Components.Graphics2D;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
+
+import java.util.List;
 
 public class VisualComponent extends Component {
     public static class Size {
@@ -29,11 +32,47 @@ public class VisualComponent extends Component {
         }
     }
 
+    public static Vector2 getOriginPoint ( int align, Vector2 size ) {
+        if ( size == null ) {
+            return new Vector2( 0, 0 );
+        }
+
+        float w = size.x;
+        float h = size.y;
+
+        if ( align == Align.center ) {
+            return new Vector2( w / 2, h / 2 );
+        } else if ( align == Align.left ) {
+            return new Vector2( 0, h / 2 );
+        } else if ( align == Align.right ) {
+            return new Vector2( w, h / 2 );
+        } else if ( align == Align.top ) {
+            return new Vector2( w / 2, h );
+        } else if ( align == Align.bottom ) {
+            return new Vector2( w / 2, 0 );
+        } else if ( align == Align.bottomLeft ) {
+            return new Vector2( 0, 0 );
+        } else if ( align == Align.bottomRight ) {
+            return new Vector2( w, 0 );
+        } else if ( align == Align.topLeft ) {
+            return new Vector2( 0, h );
+        } else if ( align == Align.topRight ) {
+            return new Vector2( w, h );
+        } else {
+            return new Vector2( 0, 0 );
+        }
+    }
+
+
     protected int align = Align.bottomLeft;
 
     protected Vector2 anchor = new Vector2( 0, 0 );
 
     protected Size size;
+
+    protected boolean autoSize = false;
+
+    protected Rectangle autoSizeRectangle;
 
     /* Component Dependencies */
     protected Transform transform;
@@ -44,6 +83,54 @@ public class VisualComponent extends Component {
 
     public Vector2 getAnchor () {
         return anchor;
+    }
+
+    public boolean getAutoSize () {
+        return this.autoSize;
+    }
+
+    public VisualComponent setAutoSize ( boolean autoSize ) {
+        this.autoSize = autoSize;
+
+        return this;
+    }
+
+    public Rectangle getAutoSizeRectangle () {
+        if ( this.autoSizeRectangle == null ) {
+            if ( !this.autoSize ) {
+                Size size = this.getSize();
+
+                if ( size == null ) {
+                    size = new Size( 0, 0 );
+                }
+
+                Vector2 pos = this.getAnchorPosition();
+
+                this.autoSizeRectangle = new Rectangle( pos.x, pos.y, size.width, size.height );
+            } else {
+                List< VisualComponent > components = this.entity.getComponentsInChildren( VisualComponent.class );
+
+                Transform selfTransform = this.getTransform();
+
+                for ( VisualComponent component : components ) {
+                    if ( component == this ) {
+                        continue;
+                    }
+
+                    Transform transform = component.getTransform();
+
+                    Rectangle child = selfTransform.globalToLocalRectangle( transform.localToGlobalRectangle( component.getAutoSizeRectangle() ) );
+
+                    if ( autoSizeRectangle == null ) {
+                        autoSizeRectangle = new Rectangle( child );
+                    } else {
+                        autoSizeRectangle.merge( child );
+                    }
+                }
+            }
+        }
+
+        return autoSizeRectangle;
     }
 
     public VisualComponent setAnchor ( Vector2 anchor ) {
@@ -66,7 +153,17 @@ public class VisualComponent extends Component {
         return this;
     }
 
+    public Transform getTransform () {
+        return transform;
+    }
+
     public Size getSize () {
+        if ( this.autoSize ) {
+            Rectangle rect = this.getAutoSizeRectangle();
+
+            return new Size( rect.getSize( new Vector2() ) );
+        }
+
         return this.size;
     }
 
@@ -83,30 +180,7 @@ public class VisualComponent extends Component {
     public Vector2 getAlignPosition () {
         Size size = this.getSize() == null ? new Size() : this.getSize();
 
-        float w = size.width;
-        float h = size.height;
-
-        if ( this.align == Align.center ) {
-            return new Vector2( w / 2, h / 2 );
-        } else if ( this.align == Align.left ) {
-            return new Vector2( 0, h / 2 );
-        } else if ( this.align == Align.right ) {
-            return new Vector2( w, h / 2 );
-        } else if ( this.align == Align.top ) {
-            return new Vector2( w / 2, h );
-        } else if ( this.align == Align.bottom ) {
-            return new Vector2( w / 2, 0 );
-        } else if ( this.align == Align.bottomLeft ) {
-            return new Vector2( 0, 0 );
-        } else if ( this.align == Align.bottomLeft ) {
-            return new Vector2( w, 0 );
-        } else if ( this.align == Align.topLeft ) {
-            return new Vector2( 0, h );
-        } else if ( this.align == Align.topRight ) {
-            return new Vector2( w, h );
-        } else {
-            return new Vector2( 0, 0 );
-        }
+        return VisualComponent.getOriginPoint( this.align, size.toVector2() );
     }
 
     public Vector2 getAnchorPosition () {
@@ -114,7 +188,7 @@ public class VisualComponent extends Component {
     }
 
     public Vector2 getGlobalAnchorPosition () {
-        return this.transform.localtoGlobalPoint( this.getAnchorPosition() );
+        return this.transform.localToGlobalPoint( this.getAnchorPosition() );
     }
 
     public Rectangle getRectangle () {
@@ -140,5 +214,14 @@ public class VisualComponent extends Component {
         super.onAwake();
 
         this.transform = this.entity.getComponentInParent( Transform.class );
+    }
+
+    @Override
+    public void onDraw () {
+        super.onDraw();
+
+        if ( autoSize ) {
+            this.entity.getComponentInParent( Renderer2D.class ).debugRenderer.draw( Color.PURPLE, this.getAutoSizeRectangle(), this.getTransform() );
+        }
     }
 }

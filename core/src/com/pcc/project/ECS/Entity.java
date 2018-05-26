@@ -1,10 +1,8 @@
 package com.pcc.project.ECS;
 
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.pcc.project.Utils.SafeArrayList;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,11 +30,13 @@ import java.util.stream.Collectors;
 * */
 
 public class Entity {
+    public Entity root;
+
     public Entity parent;
 
-    public ArrayList< Entity > children;
+    public SafeArrayList< Entity > children;
 
-    public ArrayList< Component > components;
+    public SafeArrayList< Component > components;
 
     public HashMap< Component, ComponentState > componentStates;
 
@@ -54,7 +54,13 @@ public class Entity {
 
         this.children = new SafeArrayList<>();
         this.componentStates = new HashMap<>();
-        this.components = new SafeArrayList<>(  );
+        this.components = new SafeArrayList<>();
+
+        if ( this.parent != null ) {
+            this.root = this.parent.root;
+        } else {
+            this.root = this;
+        }
     }
 
     public boolean getEnabled () {
@@ -67,6 +73,46 @@ public class Entity {
         return this;
     }
 
+    public Entity setChildAfter ( Entity child, Entity predecessor ) {
+        if ( this.children.contains( predecessor ) ) {
+            this.children.remove( child );
+
+            int successorIndex = this.children.indexOf( predecessor );
+
+            this.children.add( successorIndex + 1, child );
+        }
+
+        return this;
+    }
+
+    public Entity setChildBefore ( Entity child, Entity successor ) {
+        if ( this.children.contains( successor ) ) {
+            this.children.remove( child );
+
+            int successorIndex = this.children.indexOf( successor );
+
+            this.children.add( successorIndex, child );
+        }
+
+        return this;
+    }
+
+    public Entity setAfter ( Entity predecessor ) {
+        if ( this.parent != null ) {
+            this.parent.setChildAfter( this, predecessor );
+        }
+
+        return this;
+    }
+
+    public Entity setBefore ( Entity successor ) {
+        if ( this.parent != null ) {
+            this.parent.setChildBefore( this, successor );
+        }
+
+        return this;
+    }
+
     public  <T extends Entity> T instantiate ( Prefab<T> prefab ) {
         return this.instantiate( prefab, null );
     }
@@ -75,6 +121,8 @@ public class Entity {
         T entity = prefab.instantiate();
 
         entity.parent = this;
+
+        entity.root = this.root;
 
         this.children.add( entity );
 
@@ -96,6 +144,8 @@ public class Entity {
             T entity = constructor.newInstance( this, name );
 
             entity.parent = this;
+
+            entity.root = this.root;
 
             this.children.add( entity );
 
@@ -173,7 +223,13 @@ public class Entity {
 
     public void destroyComponent ( Component component ) {
         if ( this.componentStates.containsKey( component ) ) {
-            component.onDestroy();
+            ComponentState state = this.componentStates.get( component );
+
+            state.destroyed = true;
+
+            if ( state.awakened ) {
+                component.onDestroy();
+            }
 
             this.components.remove( component );
 
@@ -182,6 +238,10 @@ public class Entity {
     }
 
     public Entity getEntity ( String name ) {
+        if ( name.equals( this.name ) ) {
+            return this;
+        }
+
         for ( Entity entity : this.children ) {
             if ( entity.name != null && entity.name.equals( name ) ) {
                 return entity;
@@ -351,34 +411,6 @@ public class Entity {
         }
     }
 
-    public void onEnable () {
-        for ( Component component : this.components ) {
-            if ( component.enabled ) {
-                component.onEnable();
-            }
-        }
-
-        for ( Entity child : this.children ) {
-            if ( child.enabled ) {
-                child.onEnable();
-            }
-        }
-    }
-
-    public void onDisable () {
-        for ( Component component : this.components ) {
-            if ( component.enabled ) {
-                component.onDisable();
-            }
-        }
-
-        for ( Entity child : this.children ) {
-            if ( child.enabled ) {
-                child.onDisable();
-            }
-        }
-    }
-
     public void syncEnableState () {
         if ( !this.enabled ) {
             return;
@@ -404,11 +436,16 @@ public class Entity {
     }
 
     public void onUpdate () {
+        this.children.purgeIterators();
+        this.components.purgeIterators();
+
         this.syncEnableState();
 
         if ( this.enabled ) {
             for ( Component component : this.components ) {
-                if ( component.enabled ) {
+                ComponentState state = this.componentStates.get( component );
+
+                if ( state != null && component.enabled && state.awakened && !state.destroyed ) {
                     component.onUpdate();
                 }
             }
@@ -418,7 +455,9 @@ public class Entity {
             }
 
             for ( Component component : this.components ) {
-                if ( component.enabled ) {
+                ComponentState state = this.componentStates.get( component );
+
+                if ( state != null && component.enabled && state.awakened && !state.destroyed ) {
                     component.onAfterUpdate();
                 }
             }
@@ -430,7 +469,7 @@ public class Entity {
             for ( Component component : this.components ) {
                 ComponentState state = this.componentStates.get( component );
 
-                if ( component.enabled && state.awakened ) {
+                if ( component.enabled && state.awakened && !state.destroyed ) {
                     component.onDraw();
                 }
             }
@@ -442,7 +481,7 @@ public class Entity {
             for ( Component component : this.components ) {
                 ComponentState state = this.componentStates.get( component );
 
-                if ( component.enabled && state.awakened ) {
+                if ( component.enabled && state.awakened && !state.destroyed ) {
                     component.onAfterDraw();
                 }
             }
@@ -457,5 +496,7 @@ public class Entity {
         for ( Entity child : this.children ) {
             child.onDestroy();
         }
+
+        this.children.clear();
     }
 }

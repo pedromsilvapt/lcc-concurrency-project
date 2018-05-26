@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class NetworkMessages {
-    static List<Map<String, String>> parse ( String message ) {
+    public static List<Map<String, String>> parse ( String message ) {
         List<Map<String, String> > entities = new ArrayList<>();
 
         String[] entitiesMessage = message.split( ";" );
@@ -38,7 +38,7 @@ public class NetworkMessages {
         return properties.entrySet().stream().map( NetworkMessages::stringifySingleProperty ).collect( Collectors.joining( "," ) );
     }
 
-    static String stringify ( List<Map<String, String>> entities ) {
+    public static String stringify ( List<Map<String, String>> entities ) {
         return entities.stream().map( props -> NetworkMessages.stringifyProperties( props ) ).collect( Collectors.joining( ";" ) );
     }
 }

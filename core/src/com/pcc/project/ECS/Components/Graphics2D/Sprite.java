@@ -35,8 +35,10 @@ public class Sprite extends TexturedComponent {
         return color;
     }
 
-    public void setColor ( Color color ) {
+    public Sprite setColor ( Color color ) {
         this.color = color;
+
+        return this;
     }
 
     public float getOpacity () {
@@ -105,6 +107,8 @@ public class Sprite extends TexturedComponent {
             this.renderer.debugRenderer.drawPoint( Color.BLUE, this.transform.getPosition(), this.transform );
 
             this.renderer.debugRenderer.drawVector( Color.RED, this.getAnchorPosition(), this.transform.getForward().scl( 30 ), this.transform );
+
+            this.renderer.setMode( Renderer2D.RendererMode.Sprite );
 
             if ( this.patchConfig != null ) {
                 NinePatch patch = new NinePatch( this.texture, this.patchConfig.left, this.patchConfig.right, this.patchConfig.top, this.patchConfig.bottom );

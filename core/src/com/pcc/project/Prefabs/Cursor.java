@@ -17,7 +17,7 @@ public class Cursor extends Prefab< Entity > {
                 .setAlign( Align.topLeft );
 
         cursor.addComponent( SetToMouse.class, "setToMouse" )
-            .setCatchMouse( true );
+                .setCatchMouse( true );
 
         return cursor;
     }

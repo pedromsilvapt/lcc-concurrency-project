@@ -1,7 +1,6 @@
 package com.pcc.project.ECS.Components.GameLogic;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Component;
@@ -10,7 +9,6 @@ import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.Utils.Resource;
-import com.pcc.project.Utils.TimeStateMachine;
 import com.pcc.project.Utils.Velocity;
 
 /**
@@ -129,8 +127,8 @@ public class Ship extends Component {
             this.rightThrusterVelocity.deaccelerate( d );
         }
 
-        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localtoGlobalPoint( new Vector2() ) ), this.leftThrusterVelocity.getVelocity().cpy().sub( this.rightThrusterVelocity.getVelocity() ).scl( 100 ), t.getParentTransform() );
-        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localtoGlobalPoint( new Vector2() ) ), this.mainThrusterVelocity.getVelocity().cpy().scl( 100 ), t.getParentTransform() );
+        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.leftThrusterVelocity.getVelocity().cpy().sub( this.rightThrusterVelocity.getVelocity() ).scl( 100 ), t.getParentTransform() );
+        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.mainThrusterVelocity.getVelocity().cpy().scl( 100 ), t.getParentTransform() );
 
         if ( this.rightThrusterVelocity.isMoving() || this.leftThrusterVelocity.isMoving() ) {
             t.setRotation( t.getRotation() - this.leftThrusterVelocity.getVelocity().x * d * 10 + this.rightThrusterVelocity.getVelocity().x * d * 10 );

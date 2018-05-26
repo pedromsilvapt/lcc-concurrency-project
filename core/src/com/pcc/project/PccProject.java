@@ -22,12 +22,26 @@ public class PccProject extends ApplicationAdapter {
 
     @Override
     public void create () {
+        GameWorld world;
+
         this.engine = new GameEngine();
 
         this.enableDebug = System.getProperty( "debug", "false" ).equalsIgnoreCase( "true" );
 
-        this.engine.getRoot().instantiate( new GameWorld( this.customCursor, 2000, 2000 )
-                .setEnabledDebug( this.enableDebug ) );
+        String host = System.getProperty( "host" );
+
+        if ( host != null ) {
+            String[] parts = host.split( ":" );
+
+            String address = parts[ 0 ];
+            int port = Integer.parseInt( parts[ 1 ] );
+
+            world = new GameWorld( this.customCursor, address, port );
+        } else {
+            world = new GameWorld( this.customCursor );
+        }
+
+        this.engine.getRoot().instantiate( world.setEnabledDebug( this.enableDebug ) );
     }
 
     @Override
@@ -44,6 +58,10 @@ public class PccProject extends ApplicationAdapter {
 
     @Override
     public void dispose () {
-        this.engine.dispose();
+        try {
+            this.engine.dispose();
+        } finally {
+            this.engine = null;
+        }
     }
 }

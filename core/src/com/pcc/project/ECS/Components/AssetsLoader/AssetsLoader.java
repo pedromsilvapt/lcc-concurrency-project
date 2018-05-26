@@ -1,11 +1,13 @@
 package com.pcc.project.ECS.Components.AssetsLoader;
 
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class AssetsLoader extends Component {
     protected int maxThreads = 4;

@@ -2,8 +2,6 @@ package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Entity;
 
 public class InteractiveControl extends Control {
@@ -15,10 +13,26 @@ public class InteractiveControl extends Control {
 
     protected boolean isFocused = false;
 
+    protected boolean autoFocus = false;
+
     protected InputManager inputManager;
+
+    protected InteractiveControl tabTarget = null;
 
     public InteractiveControl ( Entity entity, String name ) {
         super( entity, name );
+    }
+
+    public < T extends InteractiveControl > T setTabTo ( T control ) {
+        this.tabTarget = control;
+
+        return control;
+    }
+
+    public InteractiveControl setAutoFocus ( boolean autoFocus ) {
+        this.autoFocus = autoFocus;
+
+        return this;
     }
 
     public void onMouseEnter () { }
@@ -62,24 +76,23 @@ public class InteractiveControl extends Control {
         super.onAwake();
 
         this.inputManager = this.entity.getComponentInParent( InputManager.class );
+
+        if ( this.autoFocus ) {
+            this.focus();
+        }
     }
 
     @Override
     public void onUpdate () {
         super.onUpdate();
 
-        int mX = Gdx.input.getX();
-        int mY = Gdx.input.getY();
+        boolean contains = this.inputManager.mouseFocused == this;
 
-        Vector2 global = this.getGlobalPosition( mX, mY );
-
-        Rectangle box = this.getGlobalRectangle();
-
-        if ( !this.isMouseOver && box.contains( global ) ) {
+        if ( !this.isMouseOver && contains ) {
             this.isMouseOver = true;
 
             this.onMouseEnter();
-        } else if ( this.isMouseOver && !box.contains( global ) ) {
+        } else if ( this.isMouseOver && !contains ) {
             this.isMouseOver = false;
 
             if ( this.isMouseClicking ) {
@@ -92,7 +105,7 @@ public class InteractiveControl extends Control {
         }
 
         if ( this.isMouseOver ) {
-            boolean pressed = Gdx.input.isButtonPressed( Input.Buttons.LEFT );
+            boolean pressed = this.inputManager.isMouseClick();
 
             if ( !this.isMouseClicking && pressed ) {
                 this.isMouseClicking = true;
@@ -100,12 +113,25 @@ public class InteractiveControl extends Control {
                 this.focus();
 
                 this.onMousePress();
-            } else if ( this.isMouseClicking && !pressed ) {
+
+                this.inputManager.releaseMouseButton();
+            } else if ( this.isMouseClicking && !Gdx.input.isButtonPressed( Input.Buttons.LEFT ) ) {
                 this.isMouseClicking = false;
 
                 this.onMouseRelease();
             }
         }
+
+        if ( this.isFocused && Gdx.input.isKeyJustPressed( Input.Keys.TAB ) && this.tabTarget != null ) {
+            this.defer( () -> this.tabTarget.focus() );
+        }
+    }
+
+    @Override
+    public void onDraw () {
+        super.onDraw();
+
+        this.inputManager.draw( this );
     }
 
     @Override

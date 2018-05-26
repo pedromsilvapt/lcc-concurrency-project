@@ -73,6 +73,10 @@ public class SafeArrayList<E> extends ArrayList<E> {
         return super.remove( o );
     }
 
+    public void purgeIterators () {
+        this.iterators.clear();
+    }
+
     @Override
     public Iterator< E > iterator () {
         SafeArrayListIterator<E> iterator = new SafeArrayListIterator<E>( this );

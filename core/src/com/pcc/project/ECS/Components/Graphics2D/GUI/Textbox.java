@@ -169,7 +169,7 @@ public class Textbox extends InteractiveControl {
     public void onFocus () {
         super.onFocus();
 
-        this.blinkingCursorState.start();
+        this.blinkingCursorState.start( 1 );
     }
 
     @Override

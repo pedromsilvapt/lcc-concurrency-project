@@ -1,6 +1,7 @@
 package com.pcc.project.ECS.Components.Graphics2D;
 
 import com.badlogic.gdx.math.Matrix3;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Component;
 import com.pcc.project.ECS.Entity;
@@ -8,7 +9,7 @@ import com.pcc.project.ECS.Entity;
 public class Transform extends Component {
     public static String defaultName = "transform";
 
-    private Matrix3 matAux = new Matrix3(  );
+    private Matrix3 matAux = new Matrix3();
 
     protected Matrix3 localToWorldMatrix = new Matrix3();
 
@@ -17,7 +18,7 @@ public class Transform extends Component {
     protected boolean isMatrixValid = false;
 
 
-    protected Vector2 position = new Vector2(  );
+    protected Vector2 position = new Vector2();
 
     protected Vector2 scale = new Vector2( 1, 1 );
 
@@ -28,12 +29,24 @@ public class Transform extends Component {
 
     protected float globalRotation = 0;
 
-    protected Vector2 globalScale = new Vector2(1, 1);
+    protected Vector2 globalScale = new Vector2( 1, 1 );
 
     protected Transform parentTransform = null;
 
     public Transform ( Entity entity, String name ) {
         super( entity, name );
+    }
+
+    public Transform getParentTransform ( boolean refresh ) {
+        if ( refresh ) {
+            if ( this.entity.parent != null ) {
+                this.parentTransform = this.entity.parent.getComponentInParent( Transform.class );
+            } else {
+                this.parentTransform = null;
+            }
+        }
+
+        return this.parentTransform;
     }
 
     public Transform getParentTransform () {
@@ -44,9 +57,7 @@ public class Transform extends Component {
     public void onAwake () {
         super.onAwake();
 
-        if ( this.entity.parent != null ) {
-            this.parentTransform = this.entity.parent.getComponentInParent( Transform.class );
-        }
+        this.getParentTransform( true );
     }
 
     public Matrix3 getLocalToWorldMatrix () {
@@ -70,6 +81,10 @@ public class Transform extends Component {
     }
 
     public Transform setPosition ( Vector2 position ) {
+        if ( Float.isNaN( position.x ) || Float.isNaN( position.y ) ) {
+            return this;
+        }
+
         if ( this.position.x != position.x && this.position.y != position.y ) {
             this.invalidate();
         }
@@ -205,7 +220,7 @@ public class Transform extends Component {
     }
 
 
-    public Vector2 localtoGlobalPoint ( Vector2 point ) {
+    public Vector2 localToGlobalPoint ( Vector2 point ) {
         Matrix3 mat = this.matAux.set( this.getLocalToWorldMatrix() ).translate( point );
 
         return mat.getTranslation( new Vector2() );
@@ -215,7 +230,7 @@ public class Transform extends Component {
      * Transforms a local direction into a global direction
      * Directions are not affected by scale: the new direction will have the exact same length as the original one
      */
-    public Vector2 localtoGlobalDirection ( Vector2 direction ) {
+    public Vector2 localToGlobalDirection ( Vector2 direction ) {
         float degrees = this.localToWorldMatrix.getRotation();
 
         return new Vector2( direction ).rotate( degrees );
@@ -225,6 +240,7 @@ public class Transform extends Component {
      * Transforms a local vector into a global one
      * Vectors are not affected by positions: they are however affected by scales, and may have
      * a different length from the original one
+     *
      * @param vector
      */
     public Vector2 localToGlobalVector ( Vector2 vector ) {
@@ -233,10 +249,25 @@ public class Transform extends Component {
         return new Vector2( vector ).scl( mat.getScale( new Vector2() ) );
     }
 
+    public Rectangle localToGlobalRectangle ( Rectangle rect ) {
+        Vector2 pos  = this.localToGlobalPoint( rect.getPosition( new Vector2() ) );
+        Vector2 size = this.localToGlobalPoint( rect.getSize( new Vector2() ) );
+
+        return new Rectangle( pos.x, pos.y, size.x, size.y );
+    }
+
     public Vector2 globalToLocalPoint ( Vector2 vector ) {
+        return this.globalToLocalPoint( vector.x, vector.y );
+    }
+
+    public Vector2 globalToLocalPoint ( float x, float y ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
-        return this.matAux.set( mat ).translate( vector ).getTranslation( new Vector2(  ) );
+        return this.matAux.set( mat ).translate( x, y ).getTranslation( new Vector2() );
+    }
+
+    public Vector2 globalToLocalDirection ( float x, float y ) {
+        return this.globalToLocalDirection( new Vector2( x, y ) );
     }
 
     public Vector2 globalToLocalDirection ( Vector2 direction ) {
@@ -249,9 +280,20 @@ public class Transform extends Component {
         return this.matAux.set( mat ).rotate( rotation ).getRotation();
     }
 
+    public Vector2 globalToLocalVector ( float x, float y ) {
+        return this.globalToLocalVector( new Vector2( x, y ) );
+    }
+
     public Vector2 globalToLocalVector ( Vector2 vector ) {
         Matrix3 mat = this.getWorldToLocalMatrix();
 
-        return this.matAux.set( mat ).scale( vector ).getScale( new Vector2(  ) );
+        return this.matAux.set( mat ).scale( vector ).getScale( new Vector2() );
+    }
+
+    public Rectangle globalToLocalRectangle ( Rectangle rect ) {
+        Vector2 pos  = this.globalToLocalPoint( rect.getPosition( new Vector2() ) );
+        Vector2 size = this.globalToLocalPoint( rect.getSize( new Vector2() ) );
+
+        return new Rectangle( pos.x, pos.y, size.x, size.y );
     }
 }

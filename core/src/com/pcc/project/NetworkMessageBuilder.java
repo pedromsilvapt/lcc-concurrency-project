@@ -6,16 +6,28 @@ import java.util.List;
 import java.util.Map;
 
 public class NetworkMessageBuilder {
-    protected List< Map< String, String > > entities = new ArrayList<>(  );
+    public static List<Map<String, String>>  frame ( String... args ) {
+        NetworkMessageBuilder builder = new NetworkMessageBuilder().addFrame();
 
-    public NetworkMessageBuilder addEntity () {
-        entities.add( new HashMap<>(  ) );
+        int length = args.length % 2 == 0 ? args.length : args.length - 1;
+
+        for ( int i = 0; i < length; i += 2 ) {
+            builder.addKey( args[ i ], args[ i + 1 ] );
+        }
+
+        return builder.get();
+    }
+
+    protected List< Map< String, String > > frames = new ArrayList<>(  );
+
+    public NetworkMessageBuilder addFrame () {
+        frames.add( new HashMap<>(  ) );
 
         return this;
     }
 
     public NetworkMessageBuilder addKey ( String key, String value ) {
-        entities.get( entities.size() - 1 ).put( key, value );
+        frames.get( frames.size() - 1 ).put( key, value );
 
         return this;
     }
@@ -26,7 +38,7 @@ public class NetworkMessageBuilder {
 
     public NetworkMessageBuilder concat ( List<Map<String, String>> entities ) {
         for ( Map<String, String> props : entities ) {
-            this.addEntity();
+            this.addFrame();
 
             for ( Map.Entry<String, String> entry : props.entrySet() ) {
                 this.addKey( entry.getKey(), entry.getValue() );
@@ -37,6 +49,6 @@ public class NetworkMessageBuilder {
     }
 
     public List<Map<String, String>> get () {
-        return this.entities;
+        return this.frames;
     }
 }

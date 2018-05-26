@@ -67,7 +67,15 @@ public class TimeStateMachine {
     }
 
     public void start () {
-        this.current = 0;
-        this.elapsed = 0;
+        this.start( 0, 0 );
+    }
+
+    public void start ( int current ) {
+        this.start( current, 0 );
+    }
+
+    public void start ( int current, int elapsed ) {
+        this.current = current;
+        this.elapsed = elapsed;
     }
 }

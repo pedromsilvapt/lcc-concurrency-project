@@ -2,6 +2,7 @@ package com.pcc.project.ECS.Components.Graphics2D;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.PolygonSpriteBatch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
@@ -26,8 +27,8 @@ public class Renderer2D extends Component {
             Vector2 v1, v2;
 
             for ( int i = 1; i <= points.length; i++ ) {
-                v1 = transform.localtoGlobalPoint( points[ ( i - 1 ) % points.length ] );
-                v2 = transform.localtoGlobalPoint( points[ i % points.length ] );
+                v1 = transform.localToGlobalPoint( points[ ( i - 1 ) % points.length ] );
+                v2 = transform.localToGlobalPoint( points[ i % points.length ] );
 
                 renderer.line( v1.x, v1.y, v2.x, v2.y, color, color );
             }
@@ -192,11 +193,13 @@ public class Renderer2D extends Component {
             this.shapeRenderer.begin();
             this.shapeRenderer.setProjectionMatrix( camera.getInternalCamera().combined );
 
-            for ( DebugRendererItem item : this.items ) {
-                item.render( shapeRenderer );
+            try {
+                for ( DebugRendererItem item : this.items ) {
+                    item.render( shapeRenderer );
+                }
+            } finally {
+                this.shapeRenderer.end();
             }
-
-            this.shapeRenderer.end();
 
             this.items.clear();
         }
@@ -208,11 +211,17 @@ public class Renderer2D extends Component {
         }
     }
 
+    public enum RendererMode { Sprite, Shapes };
+
     public static String defaultName = "renderer2D";
 
     public int toggleDebugKey = 0;
 
+    public RendererMode currentMode = RendererMode.Sprite;
+
     public SpriteBatch spriteBatch;
+
+    public PolygonSpriteBatch polygonsBatch;
 
     public DebugRenderer debugRenderer;
 
@@ -254,12 +263,26 @@ public class Renderer2D extends Component {
                 .orElse( null );
     }
 
+    public void setMode ( RendererMode mode ) {
+        if ( mode != this.currentMode ) {
+            if ( this.currentMode == RendererMode.Sprite ) {
+                this.spriteBatch.flush();
+            } else if ( this.currentMode == RendererMode.Shapes ) {
+                this.polygonsBatch.flush();
+            }
+
+            this.currentMode = mode;
+        }
+    }
+
     @Override
     public void onAwake () {
         super.onAwake();
 
         this.spriteBatch = new SpriteBatch();
+        this.polygonsBatch = new PolygonSpriteBatch();
         this.debugRenderer = new DebugRenderer( this.enableDebug );
+
     }
 
     @Override
@@ -286,6 +309,7 @@ public class Renderer2D extends Component {
             camera.viewport.apply();
 
             this.spriteBatch.setProjectionMatrix( camera.getCam().combined );
+            this.polygonsBatch.setProjectionMatrix( camera.getCam().combined );
         }
 
         if ( this.spriteBatch.isDrawing() ) {
@@ -293,6 +317,7 @@ public class Renderer2D extends Component {
         }
 
         this.spriteBatch.begin();
+        this.polygonsBatch.begin();
 
         if ( this.toggleDebugKey > 0 && Gdx.input.isKeyJustPressed( this.toggleDebugKey ) ) {
             this.debugRenderer.enabled = !this.debugRenderer.enabled;
@@ -303,8 +328,13 @@ public class Renderer2D extends Component {
     public void onAfterDraw () {
         super.onAfterDraw();
 
-        this.spriteBatch.end();
         this.spriteBatch.flush();
+
+        this.polygonsBatch.flush();
+
+        this.polygonsBatch.end();
+
+        this.spriteBatch.end();
 
         this.debugRenderer.flush( this.getCamera() );
     }

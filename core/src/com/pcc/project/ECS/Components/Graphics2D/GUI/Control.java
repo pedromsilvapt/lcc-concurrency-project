@@ -1,10 +1,10 @@
 package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Vector2;
-import com.pcc.project.ECS.Component;
-import com.pcc.project.ECS.Components.Graphics2D.*;
+import com.pcc.project.ECS.Components.Graphics2D.Camera;
+import com.pcc.project.ECS.Components.Graphics2D.Renderer2D;
+import com.pcc.project.ECS.Components.Graphics2D.Transform;
+import com.pcc.project.ECS.Components.Graphics2D.VisualComponent;
 import com.pcc.project.ECS.Entity;
 
 public class Control extends VisualComponent {

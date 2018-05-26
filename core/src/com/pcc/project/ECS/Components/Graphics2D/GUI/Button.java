@@ -1,5 +1,7 @@
 package com.pcc.project.ECS.Components.Graphics2D.GUI;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
@@ -10,7 +12,6 @@ import com.pcc.project.Prefabs.GUI.BaseStylesheet;
 import com.pcc.project.Prefabs.GameObject;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class Button extends InteractiveControl {
     public static String defaultName = "button";
@@ -23,9 +24,9 @@ public class Button extends InteractiveControl {
 
     protected Color color = Color.WHITE;
 
-    protected Theme theme;
+    protected Theme theme = Theme.Grey;
 
-    protected boolean shiny;
+    protected boolean shiny = true;
 
     protected Consumer<Button> action;
 
@@ -262,6 +263,10 @@ public class Button extends InteractiveControl {
             this.setState( Button.ButtonState.Hovered );
         } else {
             this.setState( Button.ButtonState.Normal );
+        }
+
+        if ( this.isFocused && Gdx.input.isKeyJustPressed( Input.Keys.ENTER ) ) {
+            this.onMousePress();
         }
     }
 

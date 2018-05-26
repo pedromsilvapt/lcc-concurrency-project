@@ -11,5 +11,11 @@ public class BaseStylesheet {
 
     public static final Color dark = Color.valueOf( "#767676" );
 
+    public static final Color grey = Color.valueOf( "#cccccc" );
+
     public static final Color golden = Color.valueOf( "#b08d00" );
+
+    public static final Color blue = Color.valueOf( "#2db5ff" );
+
+    public static final Color red = Color.valueOf( "#ff2d2d" );
 }

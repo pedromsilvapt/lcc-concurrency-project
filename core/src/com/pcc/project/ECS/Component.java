@@ -1,5 +1,8 @@
 package com.pcc.project.ECS;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 public class Component {
     public static String defaultName = null;
 
@@ -8,6 +11,8 @@ public class Component {
     public String name;
 
     public boolean enabled = true;
+
+    public Queue<Runnable> deferred = new LinkedList<>();
 
     public Component ( Entity entity, String name ) {
         this.entity = entity;
@@ -24,6 +29,10 @@ public class Component {
         return this;
     }
 
+    public void defer ( Runnable runnable ) {
+        this.deferred.add( runnable );
+    }
+
     public void onCreate () { }
 
     public void onAwake () { }
@@ -37,7 +46,13 @@ public class Component {
     /**
      * Called before the children are updated
      */
-    public void onUpdate () { }
+    public void onUpdate () {
+        Runnable runnable;
+
+        while ( ( runnable = this.deferred.poll() ) != null ) {
+            runnable.run();
+        }
+    }
 
     /**
      * Called after the children are updated

@@ -2,10 +2,8 @@ package com.pcc.project.ECS.Components.AssetsLoader;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class TextureLoader implements Runnable {
     CompletableFuture< Pixmap > future;

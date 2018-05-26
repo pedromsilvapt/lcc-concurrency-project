@@ -28,7 +28,7 @@ public class Player extends Component {
     }
 
     public List<Map<String, String> > createStatusMessage ( String engine, String state ) {
-        return new NetworkMessageBuilder().addEntity().addKey( "message", "input" ).addKey( engine, state ).get();
+        return new NetworkMessageBuilder().addFrame().addKey( "message", "input" ).addKey( engine, state ).get();
     }
 
     @Override
