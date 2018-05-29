@@ -1,5 +1,6 @@
 package com.pcc.project.ECS.Components.Graphics2D.Behavior;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Component;
@@ -16,15 +17,51 @@ public class ScaleToSpriteSize extends Component {
 
     protected Vector2 targetSize;
 
+    protected boolean keepAspectRatio = false;
+
     /* Component Dependencies */
 
     protected Transform transform;
+
+    public boolean getKeepAspectRation () {
+        return this.keepAspectRatio;
+    }
+
+    public ScaleToSpriteSize setKeepAspectRatio ( boolean keepAspectRatio ) {
+        this.keepAspectRatio = keepAspectRatio;
+
+        return this;
+    }
+
+    public Vector2 getTargetSize () {
+        return targetSize;
+    }
+
+    public ScaleToSpriteSize setTargetSize ( Vector2 targetSize ) {
+        this.targetSize = targetSize;
+
+        return this;
+    }
+
+    public Sprite getTargetSprite () {
+        return targetSprite;
+    }
+
+    public ScaleToSpriteSize setTargetSprite ( Sprite targetSprite ) {
+        this.targetSprite = targetSprite;
+
+        return this;
+    }
 
     @Override
     public void onAwake () {
         super.onAwake();
 
         this.transform = this.entity.getComponent( Transform.class );
+
+        if ( this.targetSprite == null ) {
+            this.targetSprite = this.entity.getComponent( Sprite.class );
+        }
     }
 
     @Override
@@ -35,7 +72,7 @@ public class ScaleToSpriteSize extends Component {
             Texture texture = targetSprite.getTexture();
 
             if ( texture != null ) {
-                Vector2 scale =  this.targetSize.cpy().scl( texture.getWidth(), texture.getHeight() );
+                Vector2 scale =  new Vector2( targetSize.x / texture.getWidth(), targetSize.y / texture.getHeight() );
 
                 this.transform.setScale( scale );
             }

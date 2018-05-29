@@ -1,5 +1,6 @@
 package com.pcc.project.ECS.Components.Network;
 
+import com.badlogic.gdx.Gdx;
 import com.pcc.project.NetworkMessages;
 
 import java.io.PrintWriter;
@@ -26,6 +27,8 @@ public class NetworkSender extends Thread {
 
             while ( true ) {
                 message = this.queue.take();
+
+                Gdx.app.log( "Sender", NetworkMessages.stringify( message ) );
 
                 out.println( NetworkMessages.stringify( message ) );
                 out.flush();

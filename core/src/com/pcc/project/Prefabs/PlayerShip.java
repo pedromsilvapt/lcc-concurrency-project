@@ -1,13 +1,18 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.pcc.project.ECS.Components.GameLogic.Game;
 import com.pcc.project.ECS.Components.GameLogic.Player;
 import com.pcc.project.ECS.Components.GameLogic.Ship;
+import com.pcc.project.ECS.Components.Graphics2D.Behavior.ScaleToSpriteSize;
 import com.pcc.project.ECS.Components.Graphics2D.Behavior.SetToMouse;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
+import com.pcc.project.ECS.Components.LifecycleHooks;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
+import com.pcc.project.Prefabs.GUI.PlayerHud;
 
 public class PlayerShip extends Prefab< Entity > {
     public enum ShipColor {
@@ -23,6 +28,12 @@ public class PlayerShip extends Prefab< Entity > {
 
     protected boolean isPlayer;
 
+    float acceleration;
+
+    float energyCapacity;
+
+    Vector2 size;
+
     public PlayerShip ( String name, ShipColor color ) {
         this( name, color, false );
     }
@@ -33,6 +44,24 @@ public class PlayerShip extends Prefab< Entity > {
         this.color = color;
 
         this.isPlayer = isPlayer;
+    }
+
+    public PlayerShip setAcceleration ( float acceleration ) {
+        this.acceleration = acceleration;
+
+        return this;
+    }
+
+    public PlayerShip setEnergyCapacity ( float energyCapacity ) {
+        this.energyCapacity = energyCapacity;
+
+        return this;
+    }
+
+    public PlayerShip setSize ( Vector2 size ) {
+        this.size = size;
+
+        return this;
     }
 
     protected String getShipColorCode () {
@@ -48,8 +77,6 @@ public class PlayerShip extends Prefab< Entity > {
     protected int getShipTypeCode () {
         return 1;
     }
-
-
 
     protected String getShipAssetName () {
         int shipType = this.getShipTypeCode();
@@ -90,12 +117,32 @@ public class PlayerShip extends Prefab< Entity > {
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
                 .setAlign( Align.center );
 
-        if ( this.isPlayer ) {
-            /* ShipState */
-            ship.addComponent( Ship.class, "state" )
-                    .mainEngineSprite = engineEntity.getComponent( "sprite" );
+        /* ShipState */
+        Ship shipState = ship.addComponent( Ship.class, "state" );
+        shipState.mainEngineSprite = engineEntity.getComponent( "sprite" );
 
+        if ( this.energyCapacity > 0 ) shipState.setEnergyCapacity( this.energyCapacity );
+        if ( this.acceleration > 0 ) shipState.setAcceleration( this.acceleration );
+
+        if ( this.isPlayer ) {
             ship.addComponent( Player.class, "player" );
+
+            ship.addComponent( LifecycleHooks.class )
+                    .setOnAwake( entity -> {
+                        Entity gui = entity.root.getEntityInChildren( "gui" );
+
+                        Game game = entity.getComponentInParent( Game.class );
+
+                        if ( gui != null ) {
+                            gui.instantiate( new PlayerHud( shipState, game ) );
+                        }
+                    } );
+        }
+
+        if ( this.size != null ) {
+            ship.addComponent( ScaleToSpriteSize.class )
+                .setTargetSize( this.size )
+                .setTargetSprite( shieldEntity.getComponent( Sprite.class ) );
         }
 
         return ship;

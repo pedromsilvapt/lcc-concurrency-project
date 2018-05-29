@@ -129,9 +129,9 @@ public class GameWorld extends Prefab< Entity > {
 
 //        gui.instantiate( new GameObject().setPosition( 10 + 200 + 10, 10 );
 
-//        gui.instantiate( new LoginMenu() );
+        gui.instantiate( new LoginMenu() );
 
-          gui.instantiate( new MainMenu() );
+//          gui.instantiate( new MainMenu() );
 
 //        gui.instantiate( new PlayerHud( playerShip ) );
 

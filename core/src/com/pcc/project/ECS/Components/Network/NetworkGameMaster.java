@@ -9,6 +9,7 @@ import com.pcc.project.ECS.Components.Network.Entities.ShipEntity;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 import com.pcc.project.NetworkMessageBuilder;
+import com.pcc.project.NetworkMessages;
 import com.pcc.project.Prefabs.GameBoard;
 
 import java.lang.reflect.InvocationTargetException;
@@ -45,8 +46,14 @@ public class NetworkGameMaster extends Component {
 
     protected BiConsumer< String, User > registerCallback;
 
+    protected Runnable queueCallback;
+
     public NetworkGameMaster ( Entity entity, String name ) {
         super( entity, name );
+    }
+
+    public User getSession () {
+        return this.session;
     }
 
     @Override
@@ -54,15 +61,20 @@ public class NetworkGameMaster extends Component {
         super.onAwake();
 
         this.networkManager = this.entity.getComponentInParent( NetworkManager.class );
+
+//        this.session = new User( null, null )
+//            .setUsername( "t" );
+//
+//        this.obey( NetworkMessages.parse( "message=game-found,player1.level=1,player1.name=t,player2.level=1,player2.name=y,size.height=100,size.width=100;energy.current=1.00000000000000000000e+01,energy.total=1.00000000000000000000e+01,engine.left=false,engine.main=false,engine.power=1.00000000000000000000e+01,engine.right=false,entity=ship,forwardVelocity.x=0.00000000000000000000e+00,forwardVelocity.y=0.00000000000000000000e+00,id=<0.8536.0>,isPlayer=t,pos.x=2.50000000000000000000e+01,pos.y=5.00000000000000000000e+01,rot=0.00000000000000000000e+00,size.height=5.00000000000000000000e+00,size.width=5.00000000000000000000e+00;energy.current=1.00000000000000000000e+01,energy.total=1.00000000000000000000e+01,engine.left=false,engine.main=false,engine.power=1.00000000000000000000e+01,engine.right=false,entity=ship,forwardVelocity.x=0.00000000000000000000e+00,forwardVelocity.y=0.00000000000000000000e+00,id=<0.4818.1>,isPlayer=y,pos.x=7.50000000000000000000e+01,pos.y=5.00000000000000000000e+01,rot=1.80000000000000000000e+02,size.height=5.00000000000000000000e+00,size.width=5.00000000000000000000e+00;entity=creature,id=0.00000000000000000000e+00,pos.x=5.00000000000000000000e+01,pos.y=5.00000000000000000000e+01,type=ally;entity=creature,id=1.00000000000000000000e+00,pos.x=7.50000000000000000000e+01,pos.y=2.50000000000000000000e+01,type=ally" ) );
     }
 
-    public void commandPlayerStateChange ( String engine, Ship.Thruster state ) {
-        String onOff = state == Ship.Thruster.Idle ? "Off" : "On";
-
+    public void commandPlayerStateChange ( boolean mainEngine, boolean leftEngine, boolean rightEngine ) {
         NetworkMessageBuilder message = new NetworkMessageBuilder()
                 .addFrame()
-                .addKey( "message", "player-change" )
-                .addKey( "event", engine + onOff );
+                .addKey( "message", "key-update" )
+                .addKey( "front-engine-key", String.valueOf( mainEngine ) )
+                .addKey( "left-engine-key", String.valueOf( leftEngine ) )
+                .addKey( "right-engine-key", String.valueOf( rightEngine ) );
 
         this.networkManager.send( message.get() );
     }
@@ -82,7 +94,7 @@ public class NetworkGameMaster extends Component {
     public void commandUserCredentials ( String message, String username, String password ) {
         NetworkMessageBuilder builder = new NetworkMessageBuilder()
                 .addFrame()
-                .addKey( "message", "login" )
+                .addKey( "message", message )
                 .addKey( "username", username )
                 .addKey( "password", password );
 
@@ -95,6 +107,28 @@ public class NetworkGameMaster extends Component {
                 .addKey( "message", "logout" );
 
         this.entity.getComponent( User.class ).destroy();
+
+        this.session = null;
+
+        this.networkManager.send( builder.get() );
+    }
+
+    public void commandJoinQueue ( Runnable callback ) {
+        NetworkMessageBuilder builder = new NetworkMessageBuilder()
+            .addFrame()
+            .addKey( "message", "queue" );
+
+        this.queueCallback = callback;
+
+        this.networkManager.send( builder.get() );
+    }
+
+    public void commandLeaveQueue () {
+        NetworkMessageBuilder builder = new NetworkMessageBuilder()
+                .addFrame()
+                .addKey( "message", "leave-queue" );
+
+        this.queueCallback = null;
 
         this.networkManager.send( builder.get() );
     }
@@ -111,14 +145,16 @@ public class NetworkGameMaster extends Component {
 
     protected < T extends NetworkEntity > NetworkEntity instantiateEntity ( Class< T > entityClass, Map< String, String > state ) {
         try {
-            Method method = entityClass.getMethod( "createPrefab", Map.class );
+            Method method = entityClass.getDeclaredMethod( "createPrefab", NetworkGameMaster.class, Map.class );
 
-            Object result = method.invoke( null, state );
+            Object result = method.invoke( null, this, state );
 
             if ( result instanceof Prefab ) {
                 Entity entity = this.gameBoard.instantiate( ( Prefab< Entity > ) result );
 
-                NetworkEntity networkEntity = entity.addComponent( entityClass );
+                NetworkEntity networkEntity = entity.addComponent( entityClass )
+                        .setEntityType( state.get( "entity" ) )
+                        .setEntityId( state.get( "id" ) );
 
                 networkEntity.obey( state );
 
@@ -160,6 +196,10 @@ public class NetworkGameMaster extends Component {
     }
 
     public void obeyGameSetup ( List< Map< String, String > > message ) {
+        if ( this.queueCallback != null ) {
+            this.queueCallback.run();
+        }
+
         Map< String, String > header = message.get( 0 );
 
         int width  = Integer.parseInt( header.get( "size.width" ) );
@@ -182,9 +222,11 @@ public class NetworkGameMaster extends Component {
                 .setUsername( header.get( "player2.name" ) )
                 .setLevel( Integer.parseInt( header.get( "player2.level" ) ) );
 
-        // TODO distinguish the local player and the opponent from player1 and player2
-
-        this.gameBoard = this.entity.instantiate( new GameBoard( width, height, player1, player2 ) );
+        if ( this.session.equals( player1 ) ) {
+            this.gameBoard = this.entity.instantiate( new GameBoard( width, height, player1, player2 ) );
+        } else {
+            this.gameBoard = this.entity.instantiate( new GameBoard( width, height, player2, player1 ) );
+        }
 
         this.obeyGameUpdate( message );
     }
@@ -200,6 +242,7 @@ public class NetworkGameMaster extends Component {
         for ( int i = 1; i < message.size(); i++ ) {
             frame = message.get( i );
             if ( frame.containsKey( "entity" ) ) {
+                Gdx.app.log( "Entity", frame.toString() );
                 entity = this.obeyGameUpdateEntity( frame );
 
                 if ( entity != null && untouched.contains( entity ) ) {
@@ -224,8 +267,8 @@ public class NetworkGameMaster extends Component {
         } else {
             if ( this.loginCallback != null ) {
                 User user = this.entity.addComponent( User.class )
-                        .setUsername( message.get( 1 ).get( "username" ) )
-                        .setLevel( Integer.parseInt( message.get( 1 ).get( "level" ) ) );
+                        .setUsername( message.get( 0 ).get( "username" ) )
+                        .setLevel( Integer.parseInt( message.get( 0 ).get( "level" ) ) );
 
                 this.session = user;
 
@@ -246,8 +289,8 @@ public class NetworkGameMaster extends Component {
         } else {
             if ( this.registerCallback != null ) {
                 User user = this.entity.addComponent( User.class )
-                        .setUsername( message.get( 1 ).get( "username" ) )
-                        .setLevel( Integer.parseInt( message.get( 1 ).get( "level" ) ) );
+                        .setUsername( message.get( 0 ).get( "username" ) )
+                        .setLevel( Integer.parseInt( message.get( 0 ).get( "level" ) ) );
 
                 this.session = user;
 
@@ -264,7 +307,7 @@ public class NetworkGameMaster extends Component {
             return;
         }
 
-        if ( message.get( 0 ).containsKey( "message" ) ) {
+        if ( !message.get( 0 ).containsKey( "message" ) ) {
             Gdx.app.error( "GameMaster", "Invalid message received: No 'message' property in header frame." );
             return;
         }
@@ -277,7 +320,7 @@ public class NetworkGameMaster extends Component {
             this.obeyRegister( message );
         } else if ( messageType.equals( "game-update" ) ) {
             this.obeyGameUpdate( message );
-        } else if ( messageType.equals( "game-setup" ) ) {
+        } else if ( messageType.equals( "game-found" ) ) {
             this.obeyGameSetup( message );
         }
     }
@@ -287,6 +330,21 @@ public class NetworkGameMaster extends Component {
 
         while ( ( message = this.networkManager.receive() ) != null ) {
             this.obey( message );
+        }
+    }
+
+    @Override
+    public void onUpdate () {
+        super.onUpdate();
+
+        this.obeyAll();
+    }
+
+    public void onDestroy () {
+        super.onDestroy();
+
+        if ( this.session != null ) {
+            this.commandUserLogout();
         }
     }
 }

@@ -7,6 +7,7 @@ import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Layout.PositionLayout;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Textbox;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Window;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Components.Graphics2D.VisualComponent;
@@ -19,17 +20,50 @@ public class LoginMenu extends Prefab< Entity > {
     private boolean working = false;
 
     private void showError ( Entity menu, String error ) {
-        menu.instantiate( new MessageBox( "Error", error, () -> {
+        this.working = true;
+
+        menu.instantiate( new MessageBox( Theme.Red,"Error", error, () -> {
             this.working = false;
         } ) );
+    }
+
+    private void goToMainMenu ( Entity menu ) {
+        menu.parent.instantiate( new MainMenu() );
+
+        menu.destroy();
+    }
+
+    private void register ( Entity menu ) {
+        if ( this.working ) {
+            return;
+        }
+
+        this.working = true;
+
+        Entity textboxUsername = menu.getEntity( "textbox_username" );
+        Entity textboxPassword = menu.getEntity( "textbox_password" );
+
+        String username = textboxUsername.getComponent( Textbox.class )
+                .getValue();
+
+        String password = textboxPassword.getComponent( Textbox.class )
+                .getValue();
+
+        NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
+
+        gameMaster.commandUserRegister( username, password, ( err, user ) -> {
+            if ( err != null ) {
+                this.showError( menu, err );
+            } else {
+                this.goToMainMenu( menu );
+            }
+        } );
     }
 
     private void login ( Entity menu ) {
         if ( this.working ) {
             return;
         }
-
-        this.showError( menu, "Wrong Credentials" );
 
         this.working = true;
 
@@ -48,7 +82,7 @@ public class LoginMenu extends Prefab< Entity > {
             if ( err != null ) {
                 this.showError( menu, err );
             } else {
-//                this.goToMainMenu();
+                this.goToMainMenu( menu );
             }
         } );
     }
@@ -57,8 +91,10 @@ public class LoginMenu extends Prefab< Entity > {
     public Entity instantiate () {
         Entity menu = new GameObject().instantiate();
 
-//        menu.getComponent( Transform.class )
-//                .setPosition( 300, 300 );
+        menu.addComponent( Window.class )
+                .setTitle( "Login" )
+                .setAnchor( -20, -100 )
+                .setSize( 360, 250 );
 
         menu.instantiate( new GameObject( "label_username" ), label -> {
             label.getComponent( Transform.class )
@@ -116,7 +152,6 @@ public class LoginMenu extends Prefab< Entity > {
                     .setAction( ent -> this.login( menu ) )
                     .setTheme( Theme.Green )
                     .setShiny( true )
-                    .setAction( btn -> this.login( menu ) )
                     .setSize( 185, 49 );
         } );
 
@@ -129,12 +164,9 @@ public class LoginMenu extends Prefab< Entity > {
                     .setTheme( Theme.Grey )
                     .setColor( BaseStylesheet.dark )
                     .setShiny( true )
-                    .setAction( btn -> menu.destroy() )
+                    .setAction( btn -> this.register( menu ) )
                     .setSize( 120, 49 );
         } );
-
-//        menu.addComponent( VisualComponent.class )
-//                .setAutoSize( true );
 
         menu.addComponent( PositionLayout.class )
                 .setAlign( Align.center )

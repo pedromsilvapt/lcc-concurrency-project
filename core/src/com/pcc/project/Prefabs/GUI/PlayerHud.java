@@ -78,7 +78,7 @@ public class PlayerHud extends Prefab<Entity> {
     }
 
     public float getEnergyBarWidth ( float amount ) {
-        return amount * 2 + 18;
+        return amount * 200 / playerShip.getEnergy().getCapacity() + 18;
     }
 
     public float getEnergyBarWidth () {
@@ -136,7 +136,7 @@ public class PlayerHud extends Prefab<Entity> {
 
         Entity scoreValue = hud.instantiate( new GameObject( "scoreValue" ) );
 
-        scoreValue.addComponent( Text.class, "value" )
+        scoreValue.addComponent( Text.class, "title" )
             .setBitmapFont( BaseStylesheet.font )
             .setValue( "00010" )
             .setAutoSize( false )
@@ -149,7 +149,7 @@ public class PlayerHud extends Prefab<Entity> {
                 .setAlign( Align.bottomRight );
 
         scoreValue.addComponent( LifecycleHooks.class )
-                .setOnUpdate( e -> e.<Text>getComponent( "value" ).setValue( String.valueOf( game.getScore() ) ) );
+                .setOnUpdate( e -> e.<Text>getComponent( "title" ).setValue( String.valueOf( game.getScore() ) ) );
 
 
         hud.instantiate( new PlayerDetails( game.getPlayer(), Align.topLeft, "blue" ) );

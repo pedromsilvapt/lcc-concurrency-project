@@ -1,6 +1,7 @@
 package com.pcc.project.Prefabs;
 
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.pcc.project.ECS.Components.AssetsLoader.AssetsLoader;
@@ -59,40 +60,34 @@ public class GameBoard extends Prefab< Entity > {
         game.setPlayer( this.player );
         game.setOpponent( this.opponent );
 
-        board.instantiate( new PlayerShip( "player", PlayerShip.ShipColor.Blue, true ) )
-                .getComponent( Transform.class ).setPosition( 100, 100 );
+//        board.instantiate( new PlayerShip( "player", PlayerShip.ShipColor.Blue, true ) )
+//                .getComponent( Transform.class ).setPosition( 100, 100 );
+//
+//        board.instantiate( new PlayerShip( "opponent", PlayerShip.ShipColor.Red ) )
+//                .getComponent( Transform.class ).setPosition( 700, 100 );
 
-        board.instantiate( new PlayerShip( "enemy1", PlayerShip.ShipColor.Green ) )
-                .getComponent( Transform.class ).setPosition( 300, 100 );
+//        board.instantiate( new AlienShip( "alien1", AlienShip.ShipColor.Green ) )
+//                .getComponent( Transform.class ).setPosition( 100, 300 );
+//
+//        board.instantiate( new AlienShip( "alien2", AlienShip.ShipColor.Green ) )
+//                .getComponent( Transform.class ).setPosition( 300, 300 );
+//
+//        board.instantiate( new AlienShip( "alien3", AlienShip.ShipColor.Red ) )
+//                .getComponent( Transform.class ).setPosition( 500, 300 );
+//
+//        board.instantiate( new AlienShip( "alien4", AlienShip.ShipColor.Red ) )
+//                .getComponent( Transform.class ).setPosition( 700, 300 );
 
-        board.instantiate( new PlayerShip( "enemy2", PlayerShip.ShipColor.Orange ) )
-                .getComponent( Transform.class ).setPosition( 500, 100 );
-
-        board.instantiate( new PlayerShip( "enemy3", PlayerShip.ShipColor.Red ) )
-                .getComponent( Transform.class ).setPosition( 700, 100 );
-
-        board.instantiate( new AlienShip( "alien1", AlienShip.ShipColor.Green ) )
-                .getComponent( Transform.class ).setPosition( 100, 300 );
-
-        board.instantiate( new AlienShip( "alien2", AlienShip.ShipColor.Green ) )
-                .getComponent( Transform.class ).setPosition( 300, 300 );
-
-        board.instantiate( new AlienShip( "alien3", AlienShip.ShipColor.Red ) )
-                .getComponent( Transform.class ).setPosition( 500, 300 );
-
-        board.instantiate( new AlienShip( "alien4", AlienShip.ShipColor.Red ) )
-                .getComponent( Transform.class ).setPosition( 700, 300 );
-
-        Ship playerShip = board.getEntity( "player" ).getComponent( Ship.class );
-
-        board.addComponent( LifecycleHooks.class )
-                .setOnAwake( entity -> {
-                    Entity gui = entity.root.getEntityInChildren( "gui" );
-
-                    if ( gui != null ) {
-                        gui.instantiate( new PlayerHud( playerShip, game ) );
-                    }
-                } );
+//        Ship playerShip = board.getEntity( "player" ).getComponent( Ship.class );
+//
+//        board.addComponent( LifecycleHooks.class )
+//                .setOnAwake( entity -> {
+//                    Entity gui = entity.root.getEntityInChildren( "gui" );
+//
+//                    if ( gui != null ) {
+//                        gui.instantiate( new PlayerHud( playerShip, game ) );
+//                    }
+//                } );
 
         return board;
     }

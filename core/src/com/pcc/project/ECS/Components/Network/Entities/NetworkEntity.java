@@ -1,13 +1,14 @@
 package com.pcc.project.ECS.Components.Network.Entities;
 
 import com.pcc.project.ECS.Component;
+import com.pcc.project.ECS.Components.Network.NetworkGameMaster;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 
 import java.util.Map;
 
 public abstract class NetworkEntity extends Component {
-    public static Prefab<Entity> createPrefab ( Map<String, String> message ) {
+    public static Prefab<Entity> createPrefab ( NetworkGameMaster gameMaster, Map<String, String> message ) {
         return null;
     }
 

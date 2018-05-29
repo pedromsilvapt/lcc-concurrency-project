@@ -1,5 +1,6 @@
 package com.pcc.project.ECS.Components.Network;
 
+import com.badlogic.gdx.Gdx;
 import com.pcc.project.NetworkMessages;
 
 import java.io.BufferedReader;
@@ -24,6 +25,8 @@ public class NetworkReceiver extends Thread {
             String         line;
 
             while ( ( line = in.readLine() ) != null ) {
+                Gdx.app.debug( "Receiver", line );
+
                 this.queue.put( NetworkMessages.parse( line ) );
             }
         } catch ( Exception e ) {

@@ -49,13 +49,13 @@ public class Ship extends Component {
 
     protected Thruster rightThrusterState = Thruster.Idle;
 
-    protected Velocity mainThrusterVelocity = new Velocity( 6, 0.1f, 20 );
+    protected Velocity mainThrusterVelocity = new Velocity( 1000, 50f, 1500 );
 
-    protected Velocity leftThrusterVelocity = new Velocity( 5, 4f, 7 );
+    protected Velocity leftThrusterVelocity = new Velocity( 600, 600f, 800 );
 
-    protected Velocity rightThrusterVelocity = new Velocity( 5, 4f, 7 );
+    protected Velocity rightThrusterVelocity = new Velocity( 600, 600f, 800 );
 
-    protected Resource energy = new Resource( 100, 100, 20, 4 );
+    protected Resource energy = new Resource( 100, 100, 1, 1 );
 
     public Ship ( Entity entity, String name ) {
         super( entity, name );
@@ -67,10 +67,18 @@ public class Ship extends Component {
         return energy;
     }
 
+    public Thruster getMainThrusterState () {
+        return mainThrusterState;
+    }
+
     public Ship setMainThrusterState ( Thruster state ) {
         this.mainThrusterState = state;
 
         return this;
+    }
+
+    public Thruster getLeftThrusterState () {
+        return leftThrusterState;
     }
 
     public Ship setLeftThrusterState ( Thruster state ) {
@@ -79,10 +87,36 @@ public class Ship extends Component {
         return this;
     }
 
+    public Thruster getRightThrusterState () {
+        return rightThrusterState;
+    }
+
     public Ship setRightThrusterState ( Thruster state ) {
         this.rightThrusterState = state;
 
         return this;
+    }
+
+    public Ship setEnergyCapacity ( float energyCapacity ) {
+        this.energy.setCapacity( energyCapacity );
+
+        return this;
+    }
+
+    public Ship setEnergyAmount ( float energyAmount ) {
+        this.energy.setAmount( energyAmount );
+
+        return this;
+    }
+
+    public Ship setAcceleration ( float acceleration ) {
+        this.mainThrusterVelocity.setAcceleration( acceleration );
+
+        return this;
+    }
+
+    public Velocity getMainThrusterVelocity () {
+        return mainThrusterVelocity;
     }
 
     @Override
@@ -96,7 +130,7 @@ public class Ship extends Component {
     public void onUpdate () {
         super.onUpdate();
 
-        float d = Gdx.graphics.getDeltaTime() * 5;
+        float d = Gdx.graphics.getDeltaTime();
 
         Transform  t        = this.entity.getComponent( Transform.class );
         Renderer2D renderer = this.entity.getComponentInParent( Renderer2D.class );
@@ -106,13 +140,13 @@ public class Ship extends Component {
 
             this.energy.drain( d );
 
-            this.mainEngineSprite.setOpacity( Math.min( this.mainEngineSprite.getOpacity() + d, 1 ) );
+            this.mainEngineSprite.setOpacity( Math.min( this.mainEngineSprite.getOpacity() + d * 5, 1 ) );
         } else {
             this.mainThrusterVelocity.deaccelerate( d );
 
             this.energy.recharge( d );
 
-            this.mainEngineSprite.setOpacity( Math.max( this.mainEngineSprite.getOpacity() - d, 0 ) );
+            this.mainEngineSprite.setOpacity( Math.max( this.mainEngineSprite.getOpacity() - d * 5, 0 ) );
         }
 
         if ( this.leftThrusterState == Thruster.On ) {
@@ -127,15 +161,15 @@ public class Ship extends Component {
             this.rightThrusterVelocity.deaccelerate( d );
         }
 
-        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.leftThrusterVelocity.getVelocity().cpy().sub( this.rightThrusterVelocity.getVelocity() ).scl( 100 ), t.getParentTransform() );
-        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.mainThrusterVelocity.getVelocity().cpy().scl( 100 ), t.getParentTransform() );
+        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.leftThrusterVelocity.getVelocity().cpy().sub( this.rightThrusterVelocity.getVelocity() ), t.getParentTransform() );
+        renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.mainThrusterVelocity.getVelocity().cpy(), t.getParentTransform() );
 
         if ( this.rightThrusterVelocity.isMoving() || this.leftThrusterVelocity.isMoving() ) {
-            t.setRotation( t.getRotation() - this.leftThrusterVelocity.getVelocity().x * d * 10 + this.rightThrusterVelocity.getVelocity().x * d * 10 );
+            t.setRotation( t.getRotation() - this.leftThrusterVelocity.getVelocity().x * d + this.rightThrusterVelocity.getVelocity().x * d );
         }
 
         if ( this.mainThrusterVelocity.isMoving() ) {
-            t.getPosition().add( this.mainThrusterVelocity.getVelocity().cpy().scl( d * 12 ) );
+            t.getPosition().add( this.mainThrusterVelocity.getVelocity().cpy().scl( d ) );
 
             t.invalidate();
         }

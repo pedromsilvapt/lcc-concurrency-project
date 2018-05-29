@@ -27,10 +27,6 @@ public class Player extends Component {
         }
     }
 
-    public List<Map<String, String> > createStatusMessage ( String engine, String state ) {
-        return new NetworkMessageBuilder().addFrame().addKey( "message", "input" ).addKey( engine, state ).get();
-    }
-
     @Override
     public void onUpdate () {
         super.onUpdate();
@@ -38,13 +34,5 @@ public class Player extends Component {
         this.ship.setMainThrusterState( Gdx.input.isKeyPressed( Input.Keys.UP ) ? Ship.Thruster.On : Ship.Thruster.Idle );
         this.ship.setRightThrusterState( Gdx.input.isKeyPressed( Input.Keys.LEFT ) ? Ship.Thruster.On : Ship.Thruster.Idle );
         this.ship.setLeftThrusterState( Gdx.input.isKeyPressed( Input.Keys.RIGHT ) ? Ship.Thruster.On : Ship.Thruster.Idle );
-
-//        if ( Gdx.input.isKeyPressed( 'w' ) && ship.mainThrusterState == Ship.Thruster.Idle ) {
-//            Gdx.app.log( "Player", "Main Engine On" );
-//            ship.mainThrusterState = Ship.Thruster.On;
-//        } else if ( !Gdx.input.isKeyPressed( 'w' ) && ship.mainThrusterState == Ship.Thruster.On ) {
-//            Gdx.app.log( "Player", "Main Engine Iddle" );
-//            ship.mainThrusterState = Ship.Thruster.Idle;
-//        }
     }
 }

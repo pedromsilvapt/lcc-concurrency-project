@@ -124,7 +124,7 @@ public class Textbox extends InteractiveControl {
                 .setSize( this.size )
                 .setEnabled( this.state == TextboxState.Pressed );
 
-        this.buttonLabel = this.entity.instantiate( new GameObject( "buttonLabel" ) );
+        this.buttonLabel = this.entity.instantiate( new GameObject( "windowLabel" ) );
 
         this.onAlign();
 
@@ -144,6 +144,14 @@ public class Textbox extends InteractiveControl {
     }
 
     protected char getCharFromKey ( int key ) {
+        if ( key >= Input.Keys.NUM_0 && key <= Input.Keys.NUM_9 ) {
+            return (char) ( key - Input.Keys.NUM_0 + '0' );
+        }
+
+        if ( key >= Input.Keys.NUMPAD_0 && key <= Input.Keys.NUMPAD_9 ) {
+            return (char) ( key - Input.Keys.NUMPAD_0 + '0' );
+        }
+
         return ( char ) ( key - Input.Keys.A + 'a' );
     }
 
@@ -201,6 +209,18 @@ public class Textbox extends InteractiveControl {
 
         if ( this.isFocused ) {
             for ( int i = Input.Keys.A; i < Input.Keys.Z; i++ ) {
+                if ( Gdx.input.isKeyJustPressed( i ) ) {
+                    this.addChar( this.getCharFromKey( i ) );
+                }
+            }
+
+            for ( int i = Input.Keys.NUM_0; i < Input.Keys.NUM_9; i++ ) {
+                if ( Gdx.input.isKeyJustPressed( i ) ) {
+                    this.addChar( this.getCharFromKey( i ) );
+                }
+            }
+
+            for ( int i = Input.Keys.NUMPAD_0; i < Input.Keys.NUMPAD_9; i++ ) {
                 if ( Gdx.input.isKeyJustPressed( i ) ) {
                     this.addChar( this.getCharFromKey( i ) );
                 }

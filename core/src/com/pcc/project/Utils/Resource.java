@@ -34,6 +34,22 @@ public class Resource {
         return rechargeAmount;
     }
 
+    public void setCapacity ( float capacity ) {
+        this.capacity = capacity;
+    }
+
+    public void setAmount ( float amount ) {
+        this.amount = amount;
+    }
+
+    public void setRechargeAmount ( float rechargeAmount ) {
+        this.rechargeAmount = rechargeAmount;
+    }
+
+    public void setDrainAmount ( float drainAmount ) {
+        this.drainAmount = drainAmount;
+    }
+
     public boolean isFull (  ) {
         return this.amount >= this.capacity;
     }

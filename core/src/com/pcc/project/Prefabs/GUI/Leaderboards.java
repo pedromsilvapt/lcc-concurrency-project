@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Layout.PositionLayout;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Window;
 import com.pcc.project.ECS.Components.Graphics2D.Primitive.Rectangle;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -118,7 +119,7 @@ public class Leaderboards extends Prefab< Entity > {
         return new Vector2( width, height );
     }
 
-    public void relayout ( Vector2 size, Entity leaderboards, Entity leaderboardsText, Entity container ) {
+    public void relayout ( Vector2 size, Entity leaderboards, Entity container ) {
         if ( size == null ) {
             return;
         }
@@ -126,14 +127,8 @@ public class Leaderboards extends Prefab< Entity > {
         float width = size.x + 20;
         float height = size.y + 49 + 10 + 68 + 10;
 
-        leaderboards.getComponent( Rectangle.class )
+        leaderboards.getComponent( Window.class )
                 .setSize( width, height );
-
-        leaderboardsText.getComponent( Transform.class )
-                .setPosition( 0, height - 40 );
-
-        leaderboardsText.getComponent( Text.class )
-                .setSize( width, 40 );
 
         container.getComponent( Transform.class )
                 .setPosition( 10, 26 );
@@ -146,21 +141,11 @@ public class Leaderboards extends Prefab< Entity > {
 
         // Window
         Entity leaderboards = new GameObject( "leaderboards" ).instantiate();
-        leaderboards.addComponent( Rectangle.class )
-                .setColor( BaseStylesheet.grey )
+        leaderboards.addComponent( Window.class )
+                .setTitle( "Leaderboards" )
                 .setSize( width, height );
         leaderboards.addComponent( PositionLayout.class )
                 .setAlign( Align.center );
-
-        Entity leaderboardsText = leaderboards.instantiate( new GameObject( "header", 0, height - 40 ) );
-        leaderboardsText.addComponent( Text.class )
-                .setBitmapFont( BaseStylesheet.font )
-                .setValue( "Leaderboards" )
-                .setWrap( true )
-                .setAutoSize( false )
-                .setTextAlign( Align.center )
-                .setColor( BaseStylesheet.white )
-                .setSize( width, 40 );
 
         Entity container = leaderboards.instantiate( new GameObject( "lists" ) );
 
@@ -198,7 +183,7 @@ public class Leaderboards extends Prefab< Entity > {
         lists.add( scores );
 
         Vector2 size = this.setData( leaderboards, container, lists );
-        this.relayout( size, leaderboards, leaderboardsText, container );
+        this.relayout( size, leaderboards, container );
 
         return leaderboards;
     }

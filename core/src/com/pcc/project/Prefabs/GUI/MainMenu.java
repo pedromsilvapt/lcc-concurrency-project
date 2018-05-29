@@ -6,6 +6,7 @@ import com.pcc.project.ECS.Components.GameLogic.User;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Layout.PositionLayout;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Window;
 import com.pcc.project.ECS.Components.Network.NetworkGameMaster;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
@@ -13,6 +14,8 @@ import com.pcc.project.Prefabs.GameBoard;
 import com.pcc.project.Prefabs.GameObject;
 
 public class MainMenu extends Prefab<Entity> {
+    protected boolean inQueue = false;
+
     protected void logout ( Entity menu ) {
         NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
 
@@ -34,18 +37,39 @@ public class MainMenu extends Prefab<Entity> {
         menu.destroy();
     }
 
-    protected void findGame ( Entity menu ) {
-        Entity gui = menu.root.getEntityInChildren( "gui" );
+    protected void joinGame ( Entity menu ) {
+//        Entity gui = menu.root.getEntityInChildren( "gui" );
+//
+//        Entity gameWorld = menu.root.getEntityInChildren( "gameWorld" );
+//
+//        User player = new User(null, null).setUsername( "Pedro" ).setLevel( 1 );
+//        User opponent = new User(null, null).setUsername( "Ezequiel" ).setLevel( 1 );
+//
+//        gameWorld.instantiate( new GameBoard( 2000, 2000, player, opponent ) )
+//                .setBefore( gui );
+//
+//        menu.destroy();
+    }
 
-        Entity gameWorld = menu.root.getEntityInChildren( "gameWorld" );
+    protected void leaveQueue ( Entity menu ) {
+        inQueue = false;
 
-        User player = new User(null, null).setUsername( "Pedro" ).setLevel( 1 );
-        User opponent = new User(null, null).setUsername( "Ezequiel" ).setLevel( 1 );
+        NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
 
-        gameWorld.instantiate( new GameBoard( 2000, 2000, player, opponent ) )
-            .setBefore( gui );
+        gameMaster.commandLeaveQueue();
+    }
 
-        menu.destroy();
+    protected void joinQueue ( Entity menu ) {
+        menu.instantiate( new MessageBox( Theme.Red,"Finding Game", "Click to leave queue", () -> {
+            this.leaveQueue( menu );
+        } ) );
+
+
+        NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
+
+        gameMaster.commandJoinQueue( () -> {
+            menu.destroy();
+        } );
     }
 
     @Override
@@ -54,6 +78,10 @@ public class MainMenu extends Prefab<Entity> {
 
         float width = 200;
 
+        menu.addComponent( Window.class )
+                .setTitle( "Main Menu" )
+                .setSize( 240, 295 )
+                .setAnchor( -20, -20 );
 
         Entity play = menu.instantiate( new GameObject( "play", 0, 177 ) );
 
@@ -61,7 +89,7 @@ public class MainMenu extends Prefab<Entity> {
                 .setTheme( Theme.Yellow )
                 .setColor( BaseStylesheet.golden )
                 .setValue( "Find Game" )
-                .setAction( btn -> this.findGame( menu ) )
+                .setAction( btn -> this.joinQueue( menu ) )
                 .setSize( width, 49 );
 
         Entity leaderboards = menu.instantiate( new GameObject( "leaderboards", 0, 118 ) );

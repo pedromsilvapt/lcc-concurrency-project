@@ -187,6 +187,13 @@ public class Button extends InteractiveControl {
         return String.format( "%s_button%s", Theme.getString( this.theme ), code );
     }
 
+    public void preloadTextures () {
+        this.spriteStateNormal.getTexture();
+        this.spriteStatePressed.getTexture();
+        this.spriteStateHovered.getTexture();
+    }
+
+
     @Override
     public void onResize () {
         super.onResize();
@@ -230,7 +237,7 @@ public class Button extends InteractiveControl {
                 .setSize( this.size )
                 .setEnabled( this.state == ButtonState.Pressed );
 
-        this.buttonLabel = this.entity.instantiate( new GameObject( "buttonLabel" ) );
+        this.buttonLabel = this.entity.instantiate( new GameObject( "windowLabel" ) );
 
         this.buttonLabel.getComponent( Transform.class )
                 .setPosition( this.getSize().width / 2, this.getSize().height / 2 );
@@ -245,6 +252,8 @@ public class Button extends InteractiveControl {
                 .setColor( this.getColor() )
                 .setAlign( Align.center )
                 .setSize( this.getSize() );
+
+        this.preloadTextures();
     }
 
     public void onMousePress () {

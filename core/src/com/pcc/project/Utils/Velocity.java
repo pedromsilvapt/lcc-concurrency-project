@@ -17,6 +17,22 @@ public class Velocity {
         this.maxVelocity = maxVelocity;
     }
 
+    public void setAcceleration ( float acceleration ) {
+        this.acceleration = acceleration;
+    }
+
+    public void setMaxVelocity ( float maxVelocity ) {
+        this.maxVelocity = maxVelocity;
+    }
+
+    public void setVelocity ( Vector2 velocity ) {
+        this.velocity = velocity;
+    }
+
+    public void setDeacceleration ( float deacceleration ) {
+        this.deacceleration = deacceleration;
+    }
+
     public boolean isMoving () {
         return this.velocity.len() > 0;
     }

@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Layout.PositionLayout;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Window;
 import com.pcc.project.ECS.Components.Graphics2D.Primitive.Rectangle;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -22,11 +23,19 @@ public class MessageBox extends Prefab<Entity> {
 
     protected String message;
 
+    protected Theme theme = Theme.Yellow;
+
     protected Runnable callback;
 
 
     public MessageBox ( String title, String message ) {
         this( title, message, null );
+    }
+
+    public MessageBox ( Theme theme, String title, String message, Runnable callback ) {
+        this( title, message, callback );
+
+        this.theme = theme;
     }
 
     public MessageBox ( String title, String message, Runnable callback ) {
@@ -72,24 +81,27 @@ public class MessageBox extends Prefab<Entity> {
 
         // Temporary Window Frame
         Entity windowFrame = messageBox.instantiate( new GameObject( "windowFrame" ) );
+        windowFrame.addComponent( Window.class )
+                .setTitle( this.title )
+                .setTheme( this.theme )
+                .setSize( width, topHeight + bodyHeight );
 
-        Entity frameTop = windowFrame.instantiate( new GameObject( "windowFrameTop" ) );
+//        Entity frameTop = windowFrame.instantiate( new GameObject( "windowFrameTop" ) );
 
-        frameTop.getComponent( Transform.class )
-                .setPosition( 0, bodyHeight );
-
-        frameTop.addComponent( Rectangle.class )
-            .setColor( BaseStylesheet.red )
-            .setSize( width, topHeight );
+//        frameTop.getComponent( Transform.class )
+//                .setPosition( 0, bodyHeight );
+//
+//        frameTop.addComponent( Rectangle.class )
+//            .setColor( BaseStylesheet.red )
+//            .setSize( width, topHeight );
 
         com.badlogic.gdx.math.Rectangle padding = new com.badlogic.gdx.math.Rectangle( 10, 10, 10, 49 + 10 + 10 );
 
+//        Entity frameBody = windowFrame.instantiate( new GameObject( "windowFrameBody" ) );
 
-        Entity frameBody = windowFrame.instantiate( new GameObject( "windowFrameBody" ) );
-
-        frameBody.addComponent( Rectangle.class )
-            .setColor( Color.GRAY )
-            .setSize( width, bodyHeight );
+//        frameBody.addComponent( Rectangle.class )
+//            .setColor( Color.GRAY )
+//            .setSize( width, bodyHeight );
 
         // Title Label
         Entity title = windowFrame.instantiate( new GameObject( "windowTitle" ) );
@@ -121,7 +133,7 @@ public class MessageBox extends Prefab<Entity> {
                 .setAlign( Align.bottomLeft )
                 .setTextAlign( Align.center )
                 .setValue( this.message )
-                .setColor( BaseStylesheet.white )
+                .setColor( BaseStylesheet.dark )
                 .setSize( width - padding.x - padding.width, bodyHeight - padding.y - padding.height );
 
         Entity closeButton = windowFrame.instantiate( new GameObject( "closeButton" ) );
