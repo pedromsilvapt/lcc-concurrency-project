@@ -25,7 +25,7 @@ public class NetworkReceiver extends Thread {
             String         line;
 
             while ( ( line = in.readLine() ) != null ) {
-                Gdx.app.debug( "Receiver", line );
+                Gdx.app.log( "Receiver", line );
 
                 this.queue.put( NetworkMessages.parse( line ) );
             }

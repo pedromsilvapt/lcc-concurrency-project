@@ -2,14 +2,18 @@ package com.pcc.project.ECS.Components.Network;
 
 import com.badlogic.gdx.Gdx;
 import com.pcc.project.ECS.Component;
-import com.pcc.project.ECS.Components.GameLogic.Ship;
+import com.pcc.project.ECS.Components.GameLogic.Game;
 import com.pcc.project.ECS.Components.GameLogic.User;
+import com.pcc.project.ECS.Components.Graphics2D.GUI.Theme;
+import com.pcc.project.ECS.Components.Network.Entities.AlienEntity;
 import com.pcc.project.ECS.Components.Network.Entities.NetworkEntity;
 import com.pcc.project.ECS.Components.Network.Entities.ShipEntity;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 import com.pcc.project.NetworkMessageBuilder;
-import com.pcc.project.NetworkMessages;
+import com.pcc.project.Prefabs.GUI.Leaderboards;
+import com.pcc.project.Prefabs.GUI.MainMenu;
+import com.pcc.project.Prefabs.GUI.MessageBox;
 import com.pcc.project.Prefabs.GameBoard;
 
 import java.lang.reflect.InvocationTargetException;
@@ -45,6 +49,12 @@ public class NetworkGameMaster extends Component {
     protected BiConsumer< String, User > loginCallback;
 
     protected BiConsumer< String, User > registerCallback;
+
+    protected List< Leaderboards.LeaderboardEntry > leaderboardsScores;
+
+    protected List< Leaderboards.LeaderboardEntry > leaderboardsLevels;
+
+    protected BiConsumer< List< Leaderboards.LeaderboardEntry >, List< Leaderboards.LeaderboardEntry > > leaderboardsCallback;
 
     protected Runnable queueCallback;
 
@@ -101,6 +111,20 @@ public class NetworkGameMaster extends Component {
         this.networkManager.send( builder.get() );
     }
 
+    public void commandViewLeaderboards ( BiConsumer< List< Leaderboards.LeaderboardEntry >, List< Leaderboards.LeaderboardEntry > > callback ) {
+        this.leaderboardsCallback = callback;
+
+        NetworkMessageBuilder scoresBuilder = new NetworkMessageBuilder()
+                .addFrame().addKey( "message", "give-score-points" );
+
+        NetworkMessageBuilder levelsBuilder = new NetworkMessageBuilder()
+                .addFrame().addKey( "message", "give-score-levels" );
+
+        this.networkManager.send( scoresBuilder.get() );
+
+        this.networkManager.send( levelsBuilder.get() );
+    }
+
     public void commandUserLogout () {
         NetworkMessageBuilder builder = new NetworkMessageBuilder()
                 .addFrame()
@@ -115,8 +139,8 @@ public class NetworkGameMaster extends Component {
 
     public void commandJoinQueue ( Runnable callback ) {
         NetworkMessageBuilder builder = new NetworkMessageBuilder()
-            .addFrame()
-            .addKey( "message", "queue" );
+                .addFrame()
+                .addKey( "message", "queue" );
 
         this.queueCallback = callback;
 
@@ -138,12 +162,16 @@ public class NetworkGameMaster extends Component {
         switch ( entity ) {
             case "ship":
                 return ShipEntity.class;
+            case "creature":
+                return AlienEntity.class;
             default:
                 return null;
         }
     }
 
     protected < T extends NetworkEntity > NetworkEntity instantiateEntity ( Class< T > entityClass, Map< String, String > state ) {
+        Gdx.app.log( "Entity", state.toString() );
+
         try {
             Method method = entityClass.getDeclaredMethod( "createPrefab", NetworkGameMaster.class, Map.class );
 
@@ -183,12 +211,14 @@ public class NetworkGameMaster extends Component {
         } else {
             Class< ? extends NetworkEntity > networkEntityClass = this.getNetworkEntityClass( type );
 
-            NetworkEntity networkEntity = this.instantiateEntity( networkEntityClass, entity );
+            if ( networkEntityClass != null ) {
+                NetworkEntity networkEntity = this.instantiateEntity( networkEntityClass, entity );
 
-            if ( networkEntity != null ) {
-                this.livingEntities.add( networkEntity );
+                if ( networkEntity != null ) {
+                    this.livingEntities.add( networkEntity );
 
-                return networkEntity;
+                    return networkEntity;
+                }
             }
 
             return null;
@@ -228,6 +258,8 @@ public class NetworkGameMaster extends Component {
             this.gameBoard = this.entity.instantiate( new GameBoard( width, height, player2, player1 ) );
         }
 
+        this.gameBoard.setBefore( this.gameBoard.parent.getEntity( "gui" ) );
+
         this.obeyGameUpdate( message );
     }
 
@@ -238,16 +270,22 @@ public class NetworkGameMaster extends Component {
 
         Map< String, String > frame;
 
+        if ( message.get( 0 ).containsKey( "score" ) ) {
+            this.gameBoard.getComponent( Game.class )
+                    .setScore( ( int ) Math.floor( Float.parseFloat( message.get( 0 ).get( "score" ) ) ) );
+        }
+
         // We assume that all frames after the first one (header) are either entities or events.
         for ( int i = 1; i < message.size(); i++ ) {
             frame = message.get( i );
             if ( frame.containsKey( "entity" ) ) {
-                Gdx.app.log( "Entity", frame.toString() );
                 entity = this.obeyGameUpdateEntity( frame );
 
                 if ( entity != null && untouched.contains( entity ) ) {
                     untouched.remove( entity );
                 }
+            } else {
+                Gdx.app.error( "Entity", String.format( "Did not contain \"entity\" key: %s", frame.toString() ) );
             }
         }
 
@@ -301,6 +339,84 @@ public class NetworkGameMaster extends Component {
         this.registerCallback = null;
     }
 
+    public void obeyGameEnd ( List< Map< String, String > > message ) {
+        Gdx.app.log( "GameEnd", message.toString() );
+        String end = message.get( 0 ).get( "end-msg" );
+
+        Entity gui = gameBoard.root.getEntityInChildren( "gui" );
+
+        this.livingEntities.clear();
+
+        if ( end != null ) {
+            Game game = this.gameBoard.getComponent( Game.class );
+
+            if ( end.equals( "You lose" ) ) {
+                game.setWinner( game.getOpponent() );
+            } else {
+                game.setWinner( game.getPlayer() );
+            }
+
+            gui.instantiate( new MessageBox( Theme.Blue, "Jogo Terminado", end, () -> {
+                gameBoard.destroy();
+
+                gameBoard = null;
+
+                gui.instantiate( new MainMenu() );
+            } ) );
+        } else {
+            gameBoard.destroy();
+
+            gameBoard = null;
+
+            gui.instantiate( new MainMenu() );
+
+        }
+    }
+
+    public void obeyLeaderboardsScores ( List< Map< String, String > > message ) {
+        List< Leaderboards.LeaderboardEntry > entries = new ArrayList<>();
+
+        Map<String, String> frame;
+
+        for ( int i = 1; i < message.size(); i++ ) {
+            frame = message.get( i );
+
+            entries.add( new Leaderboards.LeaderboardEntry( frame.get( "user" ), frame.get( "value" ) ) );
+        }
+
+        this.leaderboardsScores = entries;
+
+        if ( this.leaderboardsLevels != null ) {
+            this.leaderboardsCallback.accept( this.leaderboardsScores, this.leaderboardsLevels );
+
+            this.leaderboardsCallback = null;
+            this.leaderboardsScores = null;
+            this.leaderboardsLevels = null;
+        }
+    }
+
+    public void obeyLeaderboardsLevels ( List< Map< String, String > > message ) {
+        List< Leaderboards.LeaderboardEntry > entries = new ArrayList<>();
+
+        Map<String, String> frame;
+
+        for ( int i = 1; i < message.size(); i++ ) {
+            frame = message.get( i );
+
+            entries.add( new Leaderboards.LeaderboardEntry( frame.get( "user" ), frame.get( "value" ) ) );
+        }
+
+        this.leaderboardsLevels = entries;
+
+        if ( this.leaderboardsScores != null ) {
+            this.leaderboardsCallback.accept( this.leaderboardsScores, this.leaderboardsLevels );
+
+            this.leaderboardsCallback = null;
+            this.leaderboardsScores = null;
+            this.leaderboardsLevels = null;
+        }
+    }
+
     public void obey ( List< Map< String, String > > message ) {
         if ( message.size() == 0 ) {
             Gdx.app.error( "GameMaster", "Invalid message received: No header frame." );
@@ -318,10 +434,16 @@ public class NetworkGameMaster extends Component {
             this.obeyLogin( message );
         } else if ( messageType.equals( "register" ) ) {
             this.obeyRegister( message );
-        } else if ( messageType.equals( "game-update" ) ) {
+        } else if ( messageType.equals( "scorescore" ) ) {
+            this.obeyLeaderboardsScores( message );
+        } else if ( messageType.equals( "scorelevel" ) ) {
+            this.obeyLeaderboardsLevels( message );
+        } else if ( messageType.equals( "update" ) ) {
             this.obeyGameUpdate( message );
         } else if ( messageType.equals( "game-found" ) ) {
             this.obeyGameSetup( message );
+        } else if ( messageType.equals( "game-end" ) ) {
+            this.obeyGameEnd( message );
         }
     }
 

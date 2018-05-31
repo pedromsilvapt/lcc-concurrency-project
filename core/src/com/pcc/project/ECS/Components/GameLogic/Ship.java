@@ -57,11 +57,19 @@ public class Ship extends Component {
 
     protected Resource energy = new Resource( 100, 100, 1, 1 );
 
+    protected Transform transform;
+
+    protected Game game;
+
+    private boolean enableSimulation = false;
+
     public Ship ( Entity entity, String name ) {
         super( entity, name );
     }
 
     public Sprite mainEngineSprite;
+
+    public Sprite shieldSprite;
 
     public Resource getEnergy () {
         return energy;
@@ -119,24 +127,33 @@ public class Ship extends Component {
         return mainThrusterVelocity;
     }
 
+    public Transform getTransform () {
+        return this.transform;
+    }
+
     @Override
     public void onAwake () {
         super.onAwake();
-    }
 
-    private boolean running = false;
+        this.transform = this.entity.getComponent( Transform.class );
+        this.game = this.entity.getComponentInParent( Game.class );
+    }
 
     @Override
     public void onUpdate () {
         super.onUpdate();
 
+        if ( this.game == null || this.game.getWinner() != null ) {
+            return;
+        }
+
         float d = Gdx.graphics.getDeltaTime();
 
-        Transform  t        = this.entity.getComponent( Transform.class );
+        Transform  t        = this.getTransform();
         Renderer2D renderer = this.entity.getComponentInParent( Renderer2D.class );
 
         if ( this.mainThrusterState == Thruster.On && !this.energy.isEmpty() ) {
-            this.mainThrusterVelocity.accelerate( d, t.getForward().rotate( 90 ) );
+            this.mainThrusterVelocity.accelerate( d, t.getForward() );
 
             this.energy.drain( d );
 
@@ -165,14 +182,17 @@ public class Ship extends Component {
         renderer.debugRenderer.drawVector( Color.RED, t.getParentTransform().globalToLocalPoint( t.localToGlobalPoint( new Vector2() ) ), this.mainThrusterVelocity.getVelocity().cpy(), t.getParentTransform() );
 
         if ( this.rightThrusterVelocity.isMoving() || this.leftThrusterVelocity.isMoving() ) {
-            t.setRotation( t.getRotation() - this.leftThrusterVelocity.getVelocity().x * d + this.rightThrusterVelocity.getVelocity().x * d );
+            if ( this.enableSimulation ) {
+                t.setRotation( t.getRotation() - this.leftThrusterVelocity.getVelocity().x * d + this.rightThrusterVelocity.getVelocity().x * d );
+            }
         }
 
         if ( this.mainThrusterVelocity.isMoving() ) {
-            t.getPosition().add( this.mainThrusterVelocity.getVelocity().cpy().scl( d ) );
+            if ( this.enableSimulation ) {
+                t.getPosition().add( this.mainThrusterVelocity.getVelocity().cpy().scl( d ) );
 
-            t.invalidate();
+                t.invalidate();
+            }
         }
-
     }
 }

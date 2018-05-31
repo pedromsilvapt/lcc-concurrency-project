@@ -127,13 +127,22 @@ public class GameWorld extends Prefab< Entity > {
         } );
         gui.addComponent( InputManager.class );
 
-//        gui.instantiate( new GameObject().setPosition( 10 + 200 + 10, 10 );
-
         gui.instantiate( new LoginMenu() );
 
 //          gui.instantiate( new MainMenu() );
 
 //        gui.instantiate( new PlayerHud( playerShip ) );
+
+//        User player = new User( null, null )
+//             .setUsername( "pedro" ).setLevel( 1 );
+//
+//        User opponent = new User( null, null )
+//                .setUsername( "ezequiel" ).setLevel( 1 );
+//
+//        Entity board = gui.instantiate( new GameBoard( 1000, 1000, player, opponent ) );
+//
+//        board.instantiate( new PlayerShip( player.getUsername(), PlayerShip.ShipColor.Blue, true ) );
+//        board.instantiate( new PlayerShip( opponent.getUsername(), PlayerShip.ShipColor.Red, false ) );
 
         gui.instantiate( new Cursor(), cursor -> cursor.setEnabled( false ) );
 

@@ -28,6 +28,22 @@ public class Window extends VisualComponent {
         super( entity, name );
     }
 
+    public Window setSize ( float width, float height ) {
+        super.setSize( width, height );
+
+        this.onAlign();
+
+        return this;
+    }
+
+    public Window setSize ( Size size ) {
+        super.setSize( size );
+
+        this.onAlign();
+
+        return this;
+    }
+
     public Window setAlign ( int align ) {
         if ( this.align != align ) {
             super.setAlign( align );
@@ -80,6 +96,8 @@ public class Window extends VisualComponent {
 
         float x = anchor != null ? anchor.x : 0;
         float y = anchor != null ? anchor.y : 0;
+
+        this.spriteStateNormal.setSize( this.size );
 
         this.windowLabel.getComponent( Transform.class )
                 .setPosition( x + 10, y + this.getSize().height - 30 );

@@ -74,7 +74,13 @@ public class ScaleToSpriteSize extends Component {
             if ( texture != null ) {
                 Vector2 scale =  new Vector2( targetSize.x / texture.getWidth(), targetSize.y / texture.getHeight() );
 
-                this.transform.setScale( scale );
+                if ( this.keepAspectRatio ) {
+                    float scaleUniform = Math.min( scale.x, scale.y );
+
+                    this.transform.setScale( new Vector2( scaleUniform, scaleUniform ) );
+                } else {
+                    this.transform.setScale( scale );
+                }
             }
         }
     }

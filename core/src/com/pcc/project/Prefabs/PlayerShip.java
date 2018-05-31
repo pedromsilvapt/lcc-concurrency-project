@@ -14,6 +14,9 @@ import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 import com.pcc.project.Prefabs.GUI.PlayerHud;
 
+import javax.swing.text.html.Option;
+import java.util.Optional;
+
 public class PlayerShip extends Prefab< Entity > {
     public enum ShipColor {
         Blue,
@@ -88,20 +91,14 @@ public class PlayerShip extends Prefab< Entity > {
     @Override
     public Entity instantiate () {
         Entity ship = new GameObject( this.name ).instantiate();
-        ship.addComponent( SetToMouse.class, "setToMouse" ).setEnabled( false );
 
-
-        /* Main Engine */
-        Entity engineEntity = ship.instantiate( new GameObject( "mainEngine" ) );
-        engineEntity.addComponent( Sprite.class, "sprite" )
-                .setTexturePath( "spaceshooter/PNG/Effects/fire12.png" )
-                .setAlign( Align.center );
-        engineEntity.getComponent( Transform.class )
-                .setPosition( 0, -55 );
-
+        Entity shipVisual = ship.instantiate( new GameObject( "visual" ) );
+        shipVisual.getComponent( Transform.class )
+                .setRotation( -90 );
 
         /* Shield */
-        Entity shieldEntity = ship.instantiate( new GameObject( "shield" ) );
+        Entity shieldEntity = shipVisual.instantiate( new GameObject( "shield" ) );
+        // 143 x 119
         shieldEntity.addComponent( Sprite.class, "sprite" )
                 .setOpacity( 0.4f )
                 .setTexturePath( "spaceshooter/PNG/Effects/shield2.png" )
@@ -109,7 +106,7 @@ public class PlayerShip extends Prefab< Entity > {
 
 
         /* HULL */
-        Entity hullEntity = ship.instantiate( new GameObject( "hull" ) );
+        Entity hullEntity = shipVisual.instantiate( new GameObject( "hull" ) );
         hullEntity.getComponent( Transform.class )
                 .setPosition( 0, -5 );
 
@@ -117,9 +114,18 @@ public class PlayerShip extends Prefab< Entity > {
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
                 .setAlign( Align.center );
 
+        /* Main Engine */
+        Entity engineEntity = hullEntity.instantiate( new GameObject( "mainEngine" ) );
+        engineEntity.addComponent( Sprite.class, "sprite" )
+                .setTexturePath( "spaceshooter/PNG/Effects/fire12.png" )
+                .setAlign( Align.center );
+        engineEntity.getComponent( Transform.class )
+                .setPosition( 0, -55 );
+
         /* ShipState */
         Ship shipState = ship.addComponent( Ship.class, "state" );
         shipState.mainEngineSprite = engineEntity.getComponent( "sprite" );
+        shipState.shieldSprite = shieldEntity.getComponent( "sprite" );
 
         if ( this.energyCapacity > 0 ) shipState.setEnergyCapacity( this.energyCapacity );
         if ( this.acceleration > 0 ) shipState.setAcceleration( this.acceleration );
@@ -136,13 +142,22 @@ public class PlayerShip extends Prefab< Entity > {
                         if ( gui != null ) {
                             gui.instantiate( new PlayerHud( shipState, game ) );
                         }
+                    } ).setOnDestroy( entity -> {
+                        Entity gui = entity.root.getEntityInChildren( "gui" );
+
+                        Entity hud = gui.getEntityInChildren( "hud" );
+
+                        if ( hud != null ) {
+                            hud.destroy();
+                        }
                     } );
         }
 
         if ( this.size != null ) {
             ship.addComponent( ScaleToSpriteSize.class )
                 .setTargetSize( this.size )
-                .setTargetSprite( shieldEntity.getComponent( Sprite.class ) );
+                .setTargetSprite( shieldEntity.getComponent( Sprite.class ) )
+                .setKeepAspectRatio( true );
         }
 
         return ship;

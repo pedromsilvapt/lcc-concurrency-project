@@ -1,6 +1,8 @@
 package com.pcc.project.Prefabs;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.pcc.project.ECS.Components.Graphics2D.Behavior.ScaleToSpriteSize;
 import com.pcc.project.ECS.Components.Graphics2D.Behavior.SetToMouse;
 import com.pcc.project.ECS.Components.Graphics2D.Sprite;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
@@ -16,9 +18,16 @@ public class AlienShip extends Prefab<Entity> {
 
     protected ShipColor color;
 
+    protected Vector2 size;
+
     public AlienShip ( String name, ShipColor color ) {
+        this( name, color, null );
+    }
+
+    public AlienShip ( String name, ShipColor color, Vector2 size ) {
         this.name = name;
         this.color = color;
+        this.size = size;
     }
 
     public String getShipColorCode () {
@@ -48,6 +57,11 @@ public class AlienShip extends Prefab<Entity> {
         hullEntity.addComponent( Sprite.class, "sprite" )
                 .setTexturePath( String.format( "spaceshooter/PNG/%s.png", this.getShipAssetName() ) )
                 .setAlign( Align.center );
+
+        if ( this.size != null ) {
+            hullEntity.addComponent( ScaleToSpriteSize.class )
+                    .setTargetSize( this.size );
+        }
 
         return ship;
     }

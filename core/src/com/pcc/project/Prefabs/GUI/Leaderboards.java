@@ -1,5 +1,6 @@
 package com.pcc.project.Prefabs.GUI;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.pcc.project.ECS.Components.Graphics2D.GUI.Button;
@@ -9,15 +10,18 @@ import com.pcc.project.ECS.Components.Graphics2D.GUI.Window;
 import com.pcc.project.ECS.Components.Graphics2D.Primitive.Rectangle;
 import com.pcc.project.ECS.Components.Graphics2D.Text;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
+import com.pcc.project.ECS.Components.LifecycleHooks;
+import com.pcc.project.ECS.Components.Network.NetworkGameMaster;
 import com.pcc.project.ECS.Entity;
 import com.pcc.project.ECS.Prefab;
 import com.pcc.project.Prefabs.GameObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Leaderboards extends Prefab< Entity > {
-    public class LeaderboardEntry {
+    public static class LeaderboardEntry {
         public String name;
         public String value;
 
@@ -45,29 +49,40 @@ public class Leaderboards extends Prefab< Entity > {
         return listHeight - ( heightPerEntry * index );
     }
 
-    public Vector2 setData ( Entity leaderboard, Entity container, List< List< LeaderboardEntry > > lists ) {
+    public Vector2 setData ( Entity leaderboard, Entity container, List< List< LeaderboardEntry > > lists, String[] labels ) {
         if ( destroyed ) {
             return null;
         }
 
-        float width      = 0;
-        float height     = 0;
+        float width  = 0;
+        float height = 0;
 
         float widthPerList   = 230;
         float heightPerEntry = 35;
 
-        float maxHeight  = (float)lists.stream()
+        float maxHeight = ( float ) lists.stream()
                 .mapToDouble( list -> getListHeight( heightPerEntry, list.size() ) )
                 .max().orElse( 0 );
 
         int i;
 
         float positionWidth = 40;
-        float valueWidth = 40;
-        float nameWidth = widthPerList - positionWidth - valueWidth;
+        float valueWidth    = 40;
+        float nameWidth     = widthPerList - positionWidth - valueWidth;
 
+        int col = 0;
         for ( List< LeaderboardEntry > list : lists ) {
             i = 0;
+
+            container.instantiate( new GameObject( width, maxHeight + heightPerEntry ) )
+                    .addComponent( Text.class )
+                    .setValue( labels[ col ] )
+                    .setBitmapFont( BaseStylesheet.font )
+                    .setColor( BaseStylesheet.dark )
+                    .setWrap( false )
+                    .setTextAlign( Align.center )
+                    .setSize( widthPerList, heightPerEntry )
+                    .setAutoSize( false );
 
             for ( LeaderboardEntry entry : list ) {
                 height = this.getEntryHeight( maxHeight, heightPerEntry, i );
@@ -110,13 +125,14 @@ public class Leaderboards extends Prefab< Entity > {
             }
 
             width += widthPerList + 30;
+            col++;
         }
 
         if ( width > 0 ) {
             width -= 30;
         }
 
-        return new Vector2( width, height );
+        return new Vector2( width, maxHeight );
     }
 
     public void relayout ( Vector2 size, Entity leaderboards, Entity container ) {
@@ -124,8 +140,10 @@ public class Leaderboards extends Prefab< Entity > {
             return;
         }
 
-        float width = size.x + 20;
+        float width  = size.x + 20;
         float height = size.y + 49 + 10 + 68 + 10;
+
+        Gdx.app.log( "Window", String.format( "%f, %f (%s)", width, height, size.toString() ) );
 
         leaderboards.getComponent( Window.class )
                 .setSize( width, height );
@@ -167,23 +185,28 @@ public class Leaderboards extends Prefab< Entity > {
 
         goBack.getComponent( Button.class ).setAutoFocus( true );
 
+        leaderboards.addComponent( LifecycleHooks.class )
+                .setOnAwake( entity -> {
+                    NetworkGameMaster gameMaster = entity.getComponentInParent( NetworkGameMaster.class );
 
-        List< LeaderboardEntry > points = new ArrayList<>();
-        points.add( new LeaderboardEntry( "Pedro", "10" ) );
-        points.add( new LeaderboardEntry( "Ola", "10" ) );
-        points.add( new LeaderboardEntry( "Ezequiel", "5" ) );
-        points.add( new LeaderboardEntry( "Ezequiel", "5" ) );
+                    gameMaster.commandViewLeaderboards( ( scores, points ) -> {
+                        List< List< LeaderboardEntry > > lists = new ArrayList<>();
 
-        List< LeaderboardEntry > scores = new ArrayList<>();
-        scores.add( new LeaderboardEntry( "Pedro", "10" ) );
-        scores.add( new LeaderboardEntry( "Ezequiel", "5" ) );
+                        scores.sort( ( a, b ) -> Float.compare( Float.parseFloat( a.value ), Float.parseFloat( b.value ) ) * -1 );
 
-        List< List< LeaderboardEntry > > lists = new ArrayList<>();
-        lists.add( points );
-        lists.add( scores );
+                        lists.add( points.stream()
+                                .sorted( ( a, b ) -> Float.compare( Float.parseFloat( a.value ), Float.parseFloat( b.value ) ) * -1 )
+                                .limit( 5 )
+                                .collect( Collectors.toList() ) );
+                        lists.add( scores.stream()
+                                .sorted( ( a, b ) -> Float.compare( Float.parseFloat( a.value ), Float.parseFloat( b.value ) ) * -1 )
+                                .limit( 5 )
+                                .collect( Collectors.toList() ) );
 
-        Vector2 size = this.setData( leaderboards, container, lists );
-        this.relayout( size, leaderboards, container );
+                        Vector2 size = this.setData( leaderboards, container, lists, new String[] { "Levels", "Scores" } );
+                        this.relayout( size, leaderboards, container );
+                    } );
+                } );
 
         return leaderboards;
     }

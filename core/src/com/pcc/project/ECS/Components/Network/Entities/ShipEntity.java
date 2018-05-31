@@ -1,9 +1,12 @@
 package com.pcc.project.ECS.Components.Network.Entities;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.pcc.project.ECS.Components.GameLogic.Player;
 import com.pcc.project.ECS.Components.GameLogic.Ship;
 import com.pcc.project.ECS.Components.GameLogic.User;
+import com.pcc.project.ECS.Components.Graphics2D.Renderer2D;
 import com.pcc.project.ECS.Components.Graphics2D.Transform;
 import com.pcc.project.ECS.Components.Network.NetworkGameMaster;
 import com.pcc.project.ECS.Entity;
@@ -57,9 +60,9 @@ class ShipEntityPrefab extends Prefab< Entity > {
                 .setSize( this.size )
                 .instantiate();
 
-        ship.addComponent( ShipEntity.class )
-                .setEntityId( this.entityId )
-                .setEntityType( this.entityType );
+//        ship.addComponent( ShipEntity.class )
+//                .setEntityId( this.entityId )
+//                .setEntityType( this.entityType );
 
         return ship;
     }
@@ -72,15 +75,13 @@ public class ShipEntity extends NetworkEntity {
 
         boolean isPlayer = gameMaster.getSession().equals( user );
 
-        Vector2 size = new Vector2( Float.parseFloat( message.get( "size.width" ) ), Float.parseFloat( message.get( "size.height" ) ) );
+        Vector2 size = new Vector2( Float.parseFloat( message.get( "size.width" ) ), Float.parseFloat( message.get( "size.height" ) ) ).scl( 2 );
 
         float energyCapacity = Float.parseFloat( message.get( "energy.total" ) );
 
         float acceleration = Float.parseFloat( message.get( "engine.power" ) );
 
         return new ShipEntityPrefab( message.get( "entity" ), message.get( "id" ), user.getUsername(), isPlayer, size, energyCapacity, acceleration );
-
-//        return null;
     }
 
     public ShipEntity ( com.pcc.project.ECS.Entity entity, String name ) {
@@ -122,7 +123,7 @@ public class ShipEntity extends NetworkEntity {
             this.leftEngine = leftEngine;
             this.rightEngine = rightEngine;
 
-            this.gameMaster.commandPlayerStateChange( mainEngine, leftEngine, rightEngine );
+            this.gameMaster.commandPlayerStateChange( mainEngine, rightEngine, leftEngine );
         }
     }
 
@@ -136,15 +137,21 @@ public class ShipEntity extends NetworkEntity {
 
         this.transform.setGlobalRotation( Float.parseFloat( entity.get( "rot" ) ) );
 
+        this.transform.invalidate();
+
         this.ship.setEnergyAmount( Float.parseFloat( entity.get( "energy.current" ) ) );
 
         this.ship.setEnergyCapacity( Float.parseFloat( entity.get( "energy.total" ) ) );
 
         this.ship.getMainThrusterVelocity().setAcceleration( Float.parseFloat( entity.get( "engine.power" ) ) );
 
-        Vector2 globalVelocity = new Vector2( Float.parseFloat( "forwardVelocity.x" ), Float.parseFloat( "forwardVelocity.y" ) );
+        Vector2 globalVelocity = new Vector2( Float.parseFloat( entity.get( "forwardVelocity.x" ) ), Float.parseFloat( entity.get( "forwardVelocity.y" ) ) );
 
-        Vector2 velocity = this.transform.globalToLocalVector( globalVelocity );
+        Vector2 velocity = this.transform.getParentTransform().globalToLocalVector( globalVelocity );
+
+        Vector2 rot = velocity.setAngle( this.transform.globalToLocalRotation( Float.parseFloat( entity.get( "rot" ) ) ) );
+
+        this.entity.getComponentInParent( Renderer2D.class ).debugRenderer.drawVector( Color.PURPLE, transform.getPosition(), rot, this.transform.getParentTransform() );
 
         this.ship.getMainThrusterVelocity().setVelocity( velocity );
     }

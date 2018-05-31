@@ -68,9 +68,11 @@ public class NetworkManager extends Component {
             try {
                 Socket socket = new Socket( this.serverAddress, this.serverPort );
 
+                // Creates two threads (one for sending, another for receiving messages)
                 this.networkSender = new NetworkSender( this.outgoingMessages, socket );
                 this.networkReceiver = new NetworkReceiver( this.incomingMessages, socket );
 
+                // And starts both of them
                 this.networkSender.start();
                 this.networkReceiver.start();
             } catch ( IOException e ) {
@@ -78,6 +80,19 @@ public class NetworkManager extends Component {
             }
         } else {
             Gdx.app.error( "NetworkManager", "No server address and/or port set." );
+        }
+    }
+
+    @Override
+    public void onDestroy () {
+        super.onDestroy();
+
+        if ( this.networkReceiver.isAlive() ) {
+            this.networkReceiver.interrupt();
+        }
+
+        if ( this.networkSender.isAlive() ) {
+            this.networkSender.interrupt();
         }
     }
 }

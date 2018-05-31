@@ -27,28 +27,9 @@ public class MainMenu extends Prefab<Entity> {
     }
 
     protected void leaderboards ( Entity menu ) {
-        NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
-
-        // TODO create command to gather leaderboards
-//        gameMaster.commandUserLogout();
-
         menu.parent.instantiate( new Leaderboards() );
 
         menu.destroy();
-    }
-
-    protected void joinGame ( Entity menu ) {
-//        Entity gui = menu.root.getEntityInChildren( "gui" );
-//
-//        Entity gameWorld = menu.root.getEntityInChildren( "gameWorld" );
-//
-//        User player = new User(null, null).setUsername( "Pedro" ).setLevel( 1 );
-//        User opponent = new User(null, null).setUsername( "Ezequiel" ).setLevel( 1 );
-//
-//        gameWorld.instantiate( new GameBoard( 2000, 2000, player, opponent ) )
-//                .setBefore( gui );
-//
-//        menu.destroy();
     }
 
     protected void leaveQueue ( Entity menu ) {
@@ -60,10 +41,9 @@ public class MainMenu extends Prefab<Entity> {
     }
 
     protected void joinQueue ( Entity menu ) {
-        menu.instantiate( new MessageBox( Theme.Red,"Finding Game", "Click to leave queue", () -> {
+        menu.instantiate( new MessageBox( Theme.Yellow,"Finding Game", "Click to leave queue", () -> {
             this.leaveQueue( menu );
         } ) );
-
 
         NetworkGameMaster gameMaster = menu.getComponentInParent( NetworkGameMaster.class );
 
